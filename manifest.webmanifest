@@ -1,0 +1,17 @@
+{
+  "name": "Supervisión EHS",
+  "short_name": "Supervisión EHS",
+  "description": "Supervisión de seguridad e higiene en campo",
+  "lang": "es-MX",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f2f52",
+  "theme_color": "#0B6B53",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
