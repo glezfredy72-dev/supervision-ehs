@@ -2035,7 +2035,7 @@ const MODS=[
   {k:"involucrado",t:"text",label:"Colaborador involucrado"},{k:"contratista",t:"contractor",label:"Contratista o empresa"},{k:"norma",t:"select",label:"Norma relacionada",opts:NOMS},
   {k:"accionInmediata",t:"textarea",label:"Acción inmediata tomada"},{k:"accionCorrectiva",t:"textarea",label:"Acción correctiva propuesta",req:1},
   {k:"responsable",t:"text",label:"Responsable de atenderla"},{k:"compromiso",t:"date",label:"Fecha compromiso"},{k:"fotos",t:"photos",label:"Evidencia fotográfica"}]},
- {k:"accidente",code:"ACC",name:"Aviso de accidente",ec:"EC0680 · E2148",desc:"Aviso inmediato con acciones de emergencia.",titleK:["tipo"],fields:[
+ {k:"accidente",code:"ACC",name:"Aviso de incidente laboral",ec:"EC0680 · E2148",desc:"Aviso inmediato con acciones de emergencia.",titleK:["tipo"],fields:[
   {k:"tipo",t:"select",label:"Tipo de evento",opts:ACC_TIPOS,req:1},{k:"fechaHora",t:"datetime",label:"Fecha y hora del evento",req:1},{k:"area",t:"area",label:"Área",req:1},
   {k:"ubicacion",t:"text",label:"Ubicación específica"},{k:"descripcion",t:"textarea",label:"Descripción del evento",req:1},
   {k:"involucrados",t:"rows",label:"Personas involucradas",cols:[{k:"nombre",label:"Nombre"},{k:"empresa",label:"Empresa"},{k:"lesion",label:"Lesión / parte del cuerpo"}]},
@@ -2053,8 +2053,8 @@ const MODS=[
   {k:"colaborador",t:"text",label:"Colaborador reconocido",req:1},{k:"empresa",t:"contractor",label:"Empresa"},{k:"area",t:"area",label:"Área"},
   {k:"categoria",t:"select",label:"Categoría",opts:["Uso ejemplar de EPP","Reporte proactivo de riesgo","Orden y limpieza","Mejora o innovación","Liderazgo en seguridad","Respuesta a emergencia"],req:1},
   {k:"descripcion",t:"textarea",label:"Descripción",req:1},{k:"fotos",t:"photos",label:"Evidencia fotográfica"}]},
- {k:"reporte",code:"RDJ",name:"Reporte diario de jornada",ec:"EC0680 · E2149 · Producto",desc:"Cierre del día: registros, permisos, incidencias y seguimiento.",titleK:["fecha"],fields:[
-  {k:"fecha",t:"date",label:"Fecha",req:1},{k:"resumen",t:"auto",src:"today",label:"Registros de la jornada"},{k:"permisos",t:"auto",src:"permisos",label:"Permisos de trabajo del día"},
+ {k:"reporte",code:"RDJ",name:"Reporte de cierre de jornada",ec:"EC0680 · E2149 · Producto",desc:"Cierre del día: registros, permisos, incidencias y seguimiento.",titleK:["fecha"],fields:[
+  {k:"fecha",t:"date",label:"Fecha",req:1},{k:"selfie",t:"selfie",label:"Selfie con ubicación",req:1,help:"Se toma en este momento con la cámara frontal. La foto lleva estampados tu nombre, la fecha, la hora y las coordenadas."},{k:"resumen",t:"auto",src:"today",label:"Registros de la jornada"},{k:"permisos",t:"auto",src:"permisos",label:"Permisos de trabajo del día"},
   {k:"incidencias",t:"textarea",label:"Incidencias y acciones tomadas",req:1},{k:"seguimiento",t:"auto",src:"open",label:"Seguimiento (hallazgos abiertos)"},
   {k:"seguimientoNotas",t:"textarea",label:"Notas de seguimiento"},{k:"firma",t:"sign",label:"Firma del supervisor",req:1}]}
 ];
@@ -2135,7 +2135,7 @@ MODS.push(
   {k:"vigencia",t:"select",label:"Vigencia del dictamen",opts:["Este turno","24 horas","Hasta terminar la tarea"],def:"first"},
   {k:"consentimiento",t:"consent",label:"Consentimiento del colaborador",req:1},{k:"firma",t:"sign",label:"Firma del personal de salud",req:1}]},
  {k:"atencion",perfil:"salud",col:"salud",code:"AMI",name:"Atención médica por incidente",ec:"Primer respondiente",desc:"Revisión y atención a un lesionado: estado, lesiones, signos vitales, atención y destino.",titleK:["colaborador"],fields:[
-  {k:"fechaHora",t:"datetime",label:"Fecha y hora de la atención",req:1},{k:"accidente",t:"text",label:"Folio del aviso de accidente (si existe)",ph:"ACC-…"},
+  {k:"fechaHora",t:"datetime",label:"Fecha y hora de la atención",req:1},{k:"accidente",t:"text",label:"Folio del aviso de incidente laboral (si existe)",ph:"ACC-…"},
   {k:"colaborador",t:"text",label:"Nombre del colaborador",req:1},{k:"empleado",t:"text",label:"Número de empleado"},{k:"empresa",t:"contractor",label:"Empresa"},{k:"area",t:"area",label:"Área",req:1},
   {k:"mecanismo",t:"textarea",label:"¿Qué pasó? (mecanismo de la lesión o del evento)",req:1},
   {k:"conciencia",t:"select",label:"Estado de conciencia (AVDI)",req:1,opts:["Alerta","Responde a la voz","Responde al dolor","Inconsciente"]},
@@ -2484,7 +2484,7 @@ function viewCampo(){
  return`${syncBanner()}
  <div class="proj"><div class="logo">${p.logo?`<img src="${esc(p.logo)}" alt="">`:esc((p.nombre||"?").slice(0,2).toUpperCase())}</div><div style="min-width:0;flex:1"><h2>${esc(p.nombre)}</h2><div class="muted small">${esc(p.cliente||"")}</div></div></div>
  ${ps.length>1?`<select class="inp" data-chg="proj" aria-label="Proyecto activo">${ps.map(x=>`<option value="${esc(x.id)}" ${x.id===p.id?"selected":""}>${esc(x.nombre)}</option>`).join("")}</select>`:""}
- ${all.some(m=>m.k==="accidente")?`<button class="sos" data-act="new" data-v="accidente"><span class="i">!</span><span><span class="k">Aviso de accidente</span><br><span class="d">Lesión, casi accidente, daño material o ambiental.</span></span></button>`:""}
+ ${all.some(m=>m.k==="accidente")?`<button class="sos" data-act="new" data-v="accidente"><span class="i">!</span><span><span class="k">Aviso de incidente laboral</span><br><span class="d">Lesión, casi accidente o daño material.</span></span></button>`:""}
  ${steps.length?`<section class="section"><div class="shead"><div><span class="ey">${fmtD(today)}</span><h2>Jornada de hoy</h2></div><span class="muted small">${steps.filter(k=>done.has(k)).length}/${steps.length} formatos</span></div>
  <div class="steps">${steps.map(k=>`<button class="step ${done.has(k)?"done":""}" data-act="new" data-v="${k}"><span class="dot">${done.has(k)?"✓":""}</span><span class="lbl">${esc(MOD[k].name)}</span></button>`).join("")}</div></section>`:""}
  ${mods.some(m=>m.k==="incamb")?`<button class="sos amb" data-act="new" data-v="incamb"><span class="i">!</span><span><span class="k">Incidente ambiental</span><br><span class="d">Derrame, fuga, emisión o descarga.</span></span></button>`:""}
@@ -2525,19 +2525,28 @@ function fieldHTML(f,v,p,err){
   case"chips":{const sel=v||[];return wrap(`<div class="chips">${f.opts.map(a=>`<button type="button" class="chip" data-act="chip" data-k="${f.k}" data-v="${esc(a)}" aria-pressed="${sel.includes(a)}">${esc(a)}</button>`).join("")}</div>`,false)}
   case"check":{const o=v||{};return wrap(`<div class="box">${f.items.map((it,i)=>`<div class="chk-row"><span>${esc(it)}</span><span class="seg">${[["si","Sí"],["no","No"],["na","N/A"]].map(([c,l])=>`<button type="button" class="v-${c}" data-act="seg" data-k="${f.k}" data-i="${i}" data-v="${c}" aria-pressed="${o[i]===c}">${l}</button>`).join("")}</span></div>`).join("")}</div>`,false)}
   case"rows":{const rows=v||[];return wrap(`<div class="list">${rows.map((r,i)=>`<div class="rowcard">${f.cols.map(c=>`<label for="${id}_${i}_${c.k}">${esc(c.label)}</label>${c.k==="porques"?`<textarea class="inp" id="${id}_${i}_${c.k}" data-row="${f.k}|${i}|${c.k}">${esc(r[c.k])}</textarea>`:`<input class="inp" id="${id}_${i}_${c.k}" data-row="${f.k}|${i}|${c.k}" value="${esc(r[c.k])}">`}`).join("")}<button type="button" class="btn sm ghost" data-act="row-del" data-k="${f.k}" data-i="${i}">Quitar fila</button></div>`).join("")}<div><button type="button" class="btn sm" data-act="row-add" data-k="${f.k}">+ Agregar ${rows.length?"otra fila":"fila"}</button></div></div>`,false)}
-  case"photos":{const ph=v||[];return wrap(`${ph.length?`<div class="photos">${ph.map((s,i)=>`<div class="ph"><img src="${esc(s)}" alt="Foto ${i+1}"><button type="button" class="x" data-act="ph-del" data-k="${f.k}" data-i="${i}" aria-label="Quitar foto">×</button></div>`).join("")}</div>`:""}${ph.length<4?`<div class="row"><label class="btn sm" for="${id}">Tomar foto</label><input type="file" id="${id}" accept="image/*" capture="environment" data-photo="${f.k}" hidden><label class="btn sm" for="${id}_g">Elegir de galería</label><input type="file" id="${id}_g" accept="image/*" data-photo="${f.k}" hidden></div>`:""}<div class="help">Hasta 4 fotos. Se reducen para ahorrar datos.</div>`,false)}
+  case"photos":{const ph=v||[];return wrap(`${ph.length?`<div class="photos">${ph.map((s,i)=>`<div class="ph"><img src="${esc(s)}" alt="Foto ${i+1}"><button type="button" class="x" data-act="ph-del" data-k="${f.k}" data-i="${i}" aria-label="Quitar foto">×</button></div>`).join("")}</div>`:""}${ph.length<4?`<div class="row"><label class="btn sm" for="${id}">Tomar foto</label><input type="file" id="${id}" accept="image/*" capture="environment" data-photo="${f.k}" hidden><label class="btn sm" for="${id}_g">Elegir de galería</label><input type="file" id="${id}_g" accept="image/*" data-photo="${f.k}" hidden></div>`:""}<div class="help">Hasta 4 fotos. Se reducen para ahorrar datos y llevan el logo del proyecto, la fecha y la hora.</div>`,false)}
   case"sign":return wrap(`<div class="sigbox" role="button" tabindex="0" data-act="sign" data-k="${f.k}">${v?`<img src="${esc(v)}" alt="Firma">`:"Toca para firmar"}</div>`,false);
   case"attendees":{const at=v||[];return wrap(`<div class="list">${at.map((a,i)=>`<div class="att"><div style="flex:1;min-width:0"><b>${esc(a.nombre)}</b><div class="small muted">${esc(a.empresa||"")}</div></div><div class="sg">${a.firma?`<img src="${esc(a.firma)}" alt="Firma">`:""}</div><button type="button" class="btn sm ghost" data-act="att-del" data-k="${f.k}" data-i="${i}" aria-label="Quitar">×</button></div>`).join("")}<div><button type="button" class="btn sm" data-act="att-add" data-k="${f.k}">+ Agregar persona y firma</button></div></div>`,false)}
   case"vitals":{const o=v||{};return wrap(`<div class="vit">${VIT.map(([k,l,u])=>`<label class="vbox"><span>${l}</span><span class="row" style="flex-wrap:nowrap;gap:4px"><input class="inp" type="number" inputmode="decimal" step="any" min="0" data-vit="${f.k}|${k}" value="${esc(o[k]??"")}"><span class="u">${u}</span></span></label>`).join("")}</div><div id="vit_${f.k}">${vitHint(o)}</div>`,false)}
   case"consent":{const em=v==="EMERGENCIA";return wrap(`<div class="consent">${esc(consentText(p))}</div><div class="sigbox" role="button" tabindex="0" data-act="sign" data-k="${f.k}">${v&&!em?`<img src="${esc(v)}" alt="Firma del colaborador">`:em?"Atención de emergencia: sin firma":"Firma del colaborador (toca para firmar)"}</div>${f.emerg?`<label class="row" style="flex-wrap:nowrap;cursor:pointer"><input type="checkbox" data-emerg="${f.k}" ${em?"checked":""} style="width:20px;height:20px;accent-color:var(--accent)"><span class="small">No es posible obtener su firma porque requiere atención de emergencia. Pídela en cuanto sea posible.</span></label>`:""}`,false)}
   case"pct":return"";
-  case"selfie":{const o=v||{};return wrap(`${o.foto?`<div class="selfie"><img src="${esc(o.foto)}" alt="Selfie"><div class="small">${geoText(o)}</div></div>`:""}<div class="row"><button type="button" class="btn sm ${o.foto?"":"primary"}" data-act="selfie" data-k="${f.k}">${o.foto?"Repetir selfie":"📷 Tomar selfie"}</button></div><div class="help">Tu selfie y tu ubicación se guardan solo como evidencia de inicio de jornada, conforme al aviso de privacidad del proyecto. La app no te rastrea: la ubicación se toma una vez, al tomar la foto.</div>`,false)}
+  case"selfie":{const o=v||{};return wrap(`${o.foto?`<div class="selfie"><img src="${esc(o.foto)}" alt="Selfie"><div class="small">${geoText(o)}</div></div>`:""}<div class="row"><button type="button" class="btn sm ${o.foto?"":"primary"}" data-act="selfie" data-k="${f.k}">${o.foto?"Repetir selfie":"📷 Tomar selfie"}</button></div><div class="help">Tu selfie y tu ubicación se guardan solo como evidencia de inicio y cierre de jornada, conforme al aviso de privacidad del proyecto. La app no te rastrea: la ubicación se toma una vez, al tomar la foto.</div>`,false)}
   case"auto":{const L=autoLines(f.src,S.form.pid);return wrap(`<div class="auto">${L.length?L.map(l=>`<div>${esc(l)}</div>`).join(""):`<div class="muted">Sin registros para integrar.</div>`}</div><div class="help">Se integra automáticamente al guardar.</div>`,false)}
  }
  return"";
 }
 /* ===== Selfie con ubicación (inicio de jornada) ===== */
 function geoText(o){if(!o)return"";const t=o.at?fmtDT(o.at)+" · ":"";if(o.lat==null)return`${esc(t)}<span style="color:var(--amber)">Sin ubicación: ${esc(o.geoErr||"no disponible")}</span>`;return`${esc(t)}${o.lat.toFixed(6)}, ${o.lng.toFixed(6)} (±${Math.round(o.acc||0)} m) · <a href="https://www.google.com/maps?q=${o.lat},${o.lng}" target="_blank" rel="noopener">Ver en mapa</a>`}
+// Logo del proyecto (o el de OCA si el proyecto no tiene) para estamparlo en fotos y selfies
+async function stampLogo(pid){const p=S.projects[pid];const src=(p&&p.logo)||window.COMPANY_LOGO;if(!src)return null;try{return await loadImg(src)}catch(e){return null}}
+function drawLogo(x,logo,cx,cy,h){if(!logo)return;const w=Math.min(h*3,h*(logo.naturalWidth||logo.width)/(logo.naturalHeight||logo.height||1)),pd=h*.18;x.fillStyle="rgba(255,255,255,.92)";const r=h*.15,X=cx-pd,Y=cy-pd,W=w+pd*2,H=h+pd*2;x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+W,Y,X+W,Y+H,r);x.arcTo(X+W,Y+H,X,Y+H,r);x.arcTo(X,Y+H,X,Y,r);x.arcTo(X,Y,X+W,Y,r);x.closePath();x.fill();x.drawImage(logo,cx,cy,w,h)}
+// Evidencia fotográfica: banda inferior con logo, proyecto, fecha, hora y quien registra
+async function stampPhoto(dataUrl,pid){try{const img=await loadImg(dataUrl),logo=await stampLogo(pid);const c=document.createElement("canvas");c.width=img.naturalWidth;c.height=img.naturalHeight;const x=c.getContext("2d");x.drawImage(img,0,0);
+ const fs=Math.max(13,Math.round(c.width/42)),bh=fs*3.4;x.fillStyle="rgba(11,51,86,.78)";x.fillRect(0,c.height-bh,c.width,bh);
+ let tx=fs*.7;if(logo){const lh=bh-fs*1.1;drawLogo(x,logo,fs*.7,c.height-bh+fs*.55,lh);tx=fs*.7+Math.min(lh*3,lh*(logo.naturalWidth||logo.width)/(logo.naturalHeight||logo.height||1))+fs*1.2}
+ x.fillStyle="#fff";x.font=`600 ${fs}px Arial, sans-serif`;x.fillText(projName(pid),tx,c.height-bh+fs*1.35);x.font=`${fs}px Arial, sans-serif`;x.fillText(fmtDT(new Date().toISOString())+" · "+authorName(),tx,c.height-bh+fs*2.75);
+ let d=c.toDataURL("image/jpeg",.72);c.width=c.height=0;try{d=await recompress(d,140000)}catch(e){}return d}catch(e){return dataUrl}}
 function getGeo(){return new Promise(res=>{if(!navigator.geolocation){res({err:"el teléfono no da ubicación"});return}navigator.geolocation.getCurrentPosition(p=>res({lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy}),e=>res({err:e.code===1?"permiso de ubicación negado":e.code===3?"tardó demasiado (sin señal GPS)":"no se pudo obtener"}),{enableHighAccuracy:true,timeout:20000,maximumAge:0})})}
 function stopCam(){if(S.cam){S.cam.getTracks().forEach(t=>t.stop());S.cam=null}}
 async function openSelfie(k){
@@ -2554,6 +2563,7 @@ async function finishSelfie(src){const k=S.selfieK,F=S.form;if(!F)return;const b
  const g=await S.geoP,at=new Date();const W=src.videoWidth||src.naturalWidth||src.width,H=src.videoHeight||src.naturalHeight||src.height,sc=Math.min(1,960/Math.max(W,H));
  const c=document.createElement("canvas");c.width=Math.round(W*sc);c.height=Math.round(H*sc);const x=c.getContext("2d");x.drawImage(src,0,0,c.width,c.height);
  const lines=[authorName(),fmtDT(at.toISOString())+" · "+projName(F.pid),g.err?"Sin ubicación: "+g.err:`${g.lat.toFixed(6)}, ${g.lng.toFixed(6)}  ±${Math.round(g.acc)} m`];
+ const logo=await stampLogo(F.pid);if(logo){const lh=Math.round(c.height*.075),lw=Math.min(lh*3,lh*(logo.naturalWidth||logo.width)/(logo.naturalHeight||logo.height||1));drawLogo(x,logo,c.width-lw-lh*.4,lh*.4,lh)}
  const fs=Math.max(14,Math.round(c.width/30)),bh=fs*1.45*lines.length+fs*.8;x.fillStyle="rgba(11,51,86,.78)";x.fillRect(0,c.height-bh,c.width,bh);x.fillStyle="#fff";x.font=`600 ${fs}px Arial, sans-serif`;lines.forEach((l,i)=>x.fillText(l,fs*.6,c.height-bh+fs*1.3+i*fs*1.45));
  let d=c.toDataURL("image/jpeg",.72);c.width=c.height=0;try{d=await recompress(d,140000)}catch(e){}
  F.values[k]={foto:d,at:at.toISOString(),...(g.err?{geoErr:g.err}:{lat:g.lat,lng:g.lng,acc:g.acc})};
@@ -2592,7 +2602,7 @@ async function saveForm(e){
  if(needsNotify({...doc,id}))setTimeout(()=>openNotify({...doc,id}),400);
 }
 function needsNotify(r){const ev=(S.projects[r.projectId]&&S.projects[r.projectId].notify&&S.projects[r.projectId].notify.events)||["accidente","alto","ambiental"];return(r.type==="accidente"&&ev.includes("accidente"))||(CLOSABLE.includes(r.type)&&r.values.riesgo==="Alto"&&ev.includes("alto"))||(r.type==="incamb"&&ev.includes("ambiental"))}
-const ALERT_T=r=>r.type==="accidente"?"Aviso de accidente":r.type==="incamb"?"Incidente ambiental":r.type==="hallazgoamb"?"Hallazgo ambiental de riesgo alto":"Hallazgo de riesgo alto";
+const ALERT_T=r=>r.type==="accidente"?"Aviso de incidente laboral":r.type==="incamb"?"Incidente ambiental":r.type==="hallazgoamb"?"Hallazgo ambiental de riesgo alto":"Hallazgo de riesgo alto";
 function pushNote(r){
  const v=r.values||{},host=$("#pushHost");
  host.innerHTML=`<button class="push" data-act="open" data-v="${esc(r.id)}" role="status"><span class="pi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/><path d="M12 8v5M12 16v.5"/></svg></span><span style="min-width:0"><b>${ALERT_T(r)} · ${esc(projName(r.projectId))}</b><span class="pt" style="display:block">${esc(v.tipo||"")} · ${esc(v.area||"")} · ${esc(r.folio)}</span><span class="pt" style="display:block">Reporta ${esc(r.authorName)}. Toca para ver.</span></span></button>`;
@@ -2865,7 +2875,7 @@ function viewDashboard(){
  const crit=D.rs.filter(r=>r.type==="accidente"||(r.type==="hallazgo"&&r.values.riesgo==="Alto")).slice(0,5);
  return`${ps.length>1?`<select class="inp" data-chg="fproj" aria-label="Proyecto"><option value="all">Todos los proyectos</option>${ps.map(p=>`<option value="${esc(p.id)}" ${f.proj===p.id?"selected":""}>${esc(p.nombre)}</option>`).join("")}</select>`:""}
  <select class="inp" data-chg="period" aria-label="Periodo">${PERIODS.map(([v,l])=>`<option value="${v}" ${f.period===v?"selected":""}>${l}</option>`).join("")}</select>
- ${unack.length?`<div class="notice bad"><b>${unack.length} aviso${unack.length>1?"s":""} de accidente sin enterar</b><div class="list" style="margin-top:8px">${unack.slice(0,3).map(itemHTML).join("")}</div></div>`:""}
+ ${unack.length?`<div class="notice bad"><b>${unack.length} aviso${unack.length>1?"s":""} de incidente laboral sin enterar</b><div class="list" style="margin-top:8px">${unack.slice(0,3).map(itemHTML).join("")}</div></div>`:""}
  <div class="kpis">
   ${kpi(D.by("recorrido").length,"Recorridos","","t:recorrido")}
   ${kpi(D.hal.length,"Actos y condiciones",`${D.hal.filter(r=>r.values.tipo==="Acto inseguro").length} actos · ${D.hal.filter(r=>r.values.tipo==="Condición insegura").length} cond.`,"t:hallazgo")}
@@ -3034,14 +3044,14 @@ function viewMas(){
  ${(S.myArco||[]).map(a=>`<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:8px"><span class="small"><b>${esc(a.tipo)}</b> · ${fmtD(a.at)}<br><span class="muted">${esc(a.respuesta||"Sin respuesta todavía")}</span></span><span class="pill ${arcoCls(a)}">${esc(a.estado||"Recibida")}</span></div>`).join("")}</div>
  ${r!=="visor"?`<div class="card"><h3>Portafolio de evidencias EC0680</h3><div class="muted small">Tus formatos agrupados por elemento del estándar.</div><div><button class="btn sm primary" data-act="port">Abrir portafolio</button></div></div>`:""}
  ${installCard()}
- <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.8<br>Elaborado por José Alfredo González García</div>`;
+ <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.10<br>Elaborado por José Alfredo González García</div>`;
 }
 function viewPortfolio(){
  if(wantsHistory())ensureHistory();
  const who=(S.isAdmin||isPA())?S.port.who:S.uid,a=new Date(S.port.from+"T00:00"),b=new Date(S.port.to+"T23:59:59");
  const authors={};visible().forEach(r=>authors[r.authorId]=r.authorName);
  const rs=visible().filter(r=>!r.pending&&(!who||r.authorId===who)&&new Date(r.createdAt)>=a&&new Date(r.createdAt)<=b),cnt=k=>rs.filter(r=>r.type===k).length;
- const prods=[["apr","Análisis de riesgo previo (E2147)"],["observaciones","Reporte de observaciones (E2148)"],["reporte","Reporte diario de jornada (E2149)"],["platica","Minuta de reunión firmada (E2149)"]];
+ const prods=[["apr","Análisis de riesgo previo (E2147)"],["observaciones","Reporte de observaciones (E2148)"],["reporte","Reporte de cierre de jornada (E2149)"],["platica","Minuta de reunión firmada (E2149)"]];
  return`<div class="muted small">Agrupa los formatos por elemento del estándar EC0680. Los desempeños los observa el evaluador en campo.</div>
  <div class="card">${(S.isAdmin||isPA())?`<div class="field"><label for="pt-w">Supervisor</label><select class="inp" id="pt-w" data-chg="pwho"><option value="">Todos</option>${Object.entries(authors).map(([id,n])=>`<option value="${esc(id)}" ${who===id?"selected":""}>${esc(n)}</option>`).join("")}</select></div>`:""}
  <div class="row" style="flex-wrap:nowrap"><div class="field" style="flex:1"><label for="pt-f">Desde</label><input class="inp" type="date" id="pt-f" data-chg="pfrom" value="${S.port.from}"></div><div class="field" style="flex:1"><label for="pt-t">Hasta</label><input class="inp" type="date" id="pt-t" data-chg="pto" value="${S.port.to}"></div></div></div>
@@ -3150,7 +3160,7 @@ document.addEventListener("input",e=>{
 });
 document.addEventListener("change",async e=>{
  const t=e.target;
- if(t.dataset.photo&&S.form){const f=t.files&&t.files[0];if(!f)return;try{(S.form.values[t.dataset.photo]=S.form.values[t.dataset.photo]||[]).push(await compress(f));render()}catch(err){toast("No se pudo leer la imagen. Intenta tomarla de nuevo o elegir otra.")}return}
+ if(t.dataset.photo&&S.form){const f=t.files&&t.files[0];if(!f)return;try{(S.form.values[t.dataset.photo]=S.form.values[t.dataset.photo]||[]).push(await stampPhoto(await compress(f),S.form.pid));render()}catch(err){toast("No se pudo leer la imagen. Intenta tomarla de nuevo o elegir otra.")}return}
  if(t.dataset.selfie&&S.form){const f=t.files&&t.files[0];if(!f)return;if(f.lastModified&&Date.now()-f.lastModified>10*60e3){toast("La foto debe tomarse en este momento. Usa la cámara, no la galería.");return}let url;try{url=URL.createObjectURL(f);const img=await loadImg(url);await finishSelfie(img)}catch(err){toast("No se pudo leer la foto.")}finally{if(url)URL.revokeObjectURL(url)}return}
  if(t.dataset.emerg&&S.form){S.form.values[t.dataset.emerg]=t.checked?"EMERGENCIA":"";render();return}
  if(t.dataset.logo){const f=t.files&&t.files[0];if(!f)return;syncProject();try{S.editProject.logo=await compress(f,240,1,"image/png");render()}catch(err){toast("No se pudo leer el logo.")}return}
