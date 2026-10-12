@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0B6B53"><meta name="mobile-web-app-capable" content="yes"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style><link rel="icon" href="icon-192.png"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Supervisión EHS"></head><body>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0B3356"><meta name="mobile-web-app-capable" content="yes"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style><link rel="icon" href="icon-192.png"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Supervisión EHS"></head><body>
 <title>Supervisión EHS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -7,10 +7,10 @@
 /* Layout: app de una columna, pensada para el celular: barra superior, contenido con desplazamiento y pestañas abajo.
    En computadora se centra en una columna de 560 px. Tema claro único, elegido para leerse a pleno sol en campo. */
 :root{
-  --paper:#EFF2F1; --surface:#FFFFFF; --sunk:#E3E8E6; --ink:#15222A; --ink-2:#4A5A61; --line:#CFD7D5;
-  --accent:#0B6B53; --accent-ink:#FFFFFF; --accent-soft:#D8EEE6;
-  --red:#C22A1B; --red-soft:#FBE2DE; --amber:#A86A0E; --amber-soft:#FBEBCF;
-  --green:#2B7A31; --green-soft:#DFF0E0; --blue:#1D5CA3; --blue-soft:#DEE8F6; --frame:#DDE3E1;
+  --paper:#EEF2F6; --surface:#FFFFFF; --sunk:#E2E8EF; --ink:#0F2236; --ink-2:#4A5869; --line:#CBD5DF;
+  --accent:#0B3356; --accent-ink:#FFFFFF; --accent-soft:#DCE6F1; --oca-red:#DE473C;
+  --red:#C8372D; --red-soft:#FBE2DE; --amber:#A86A0E; --amber-soft:#FBEBCF;
+  --green:#2B7A31; --green-soft:#DFF0E0; --blue:#1D5CA3; --blue-soft:#DEE8F6; --frame:#DAE1E9;
   --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
   --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
@@ -24,7 +24,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .app{height:100%;max-width:560px;margin:0 auto;display:flex;flex-direction:column;background:var(--paper);position:relative;overflow:hidden}
 @media (min-width:600px){.app{box-shadow:0 0 0 1px var(--line),0 20px 50px -20px rgba(0,0,0,.25)}}
 
-.appbar{flex:none;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;padding:8px 12px;min-height:56px}
+.appbar{flex:none;background:var(--surface);border-bottom:1px solid var(--line);box-shadow:inset 0 3px 0 var(--accent);display:flex;align-items:center;gap:8px;padding:8px 12px;min-height:56px}
 .appbar .back{border:0;background:none;width:38px;height:38px;border-radius:50%;cursor:pointer;display:grid;place-items:center;flex:none}
 .appbar .back:hover{background:var(--sunk)}
 .appbar .t{font-weight:700;font-size:18px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -38,7 +38,7 @@ main{padding-inline:16px;padding-block:16px 32px;display:flex;flex-direction:col
 .tabbar{flex:none;display:flex;background:var(--surface);border-top:1px solid var(--line);padding:4px 0 6px}
 .tabbar button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;cursor:pointer;color:var(--ink-2);font-size:11.5px;font-weight:600;position:relative;min-width:0}
 .tabbar button[aria-current="page"]{color:var(--accent)}
-.tabbar button[aria-current="page"] .tic{background:var(--accent-soft)}
+.tabbar button[aria-current="page"] .tic{background:var(--accent-soft);box-shadow:inset 0 -2px 0 var(--oca-red)}
 .tic{width:54px;height:28px;border-radius:14px;display:grid;place-items:center}
 .tbadge{position:absolute;top:2px;left:calc(50% + 9px);min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--red);color:#fff;font-size:10.5px;display:grid;place-items:center;font-family:var(--f-mono)}
 
@@ -62,10 +62,10 @@ h2{font-size:19px;font-weight:700} h3{font-size:16px;font-weight:700}
 .btn[disabled]{opacity:.5;cursor:not-allowed}
 .pill{display:inline-flex;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--sunk);color:var(--ink-2);white-space:nowrap}
 .pill.red{background:var(--red-soft);color:var(--red)} .pill.amber{background:var(--amber-soft);color:var(--amber)}
-.pill.green{background:var(--green-soft);color:var(--green)} .pill.blue{background:var(--blue-soft);color:var(--blue)} .pill.accent{background:var(--accent-soft);color:var(--accent)}
+.pill.green{background:var(--green-soft);color:var(--green)} .pill.blue{background:var(--blue-soft);color:var(--blue)} .pill.accent{background:var(--accent-soft);color:var(--accent)} .pill.solid{background:var(--accent);color:#fff}
 .code{font-family:var(--f-mono);font-weight:500;font-size:12px;padding:6px 0;width:46px;text-align:center;border-radius:6px;background:var(--accent-soft);color:var(--accent);flex:none;align-self:flex-start}
 .code.c-ACC{background:var(--red-soft);color:var(--red)} .code.c-HAL{background:var(--amber-soft);color:var(--amber)}
-.code.c-BPR{background:var(--green-soft);color:var(--green)} .code.c-PTR,.code.c-REC{background:var(--blue-soft);color:var(--blue)}
+.code.c-PTR,.code.c-REC{background:var(--blue-soft);color:var(--blue)}
 .ex{font-family:var(--f-mono);font-size:10px;padding:1px 5px;border:1px dashed var(--ink-2);border-radius:4px;color:var(--ink-2)}
 .empty{padding:22px 14px;text-align:center;border:1.5px dashed var(--line);border-radius:10px;color:var(--ink-2);display:flex;flex-direction:column;gap:8px;align-items:center}
 .notice{padding:10px 12px;border-radius:8px;font-size:13.5px;background:var(--blue-soft)}
@@ -164,9 +164,9 @@ canvas.pad{width:100%;aspect-ratio:400/150;background:#fff;border:1px solid var(
 .push b{font-size:13.5px} .push .pt{font-size:12.5px;color:var(--ink-2)}
 @keyframes drop{from{transform:translateY(-120%)}to{transform:none}}
 .pdf{background:#fff;color:#15222a;border-radius:6px;padding:16px;font-family:Arial,Helvetica,sans-serif;font-size:11.5px;border:1px solid var(--line)}
-.pdf .hd{display:flex;gap:10px;align-items:center;border-bottom:3px solid #15222a;padding-bottom:8px;margin-bottom:10px}
-.pdf h4{margin:0;font-size:15px} .pdf table{font-size:11px} .pdf th,.pdf td{border:1px solid #c8d0ce;white-space:normal;vertical-align:top;color:#15222a}
-.pdf th{background:#eef2f1;width:34%}
+.pdf .hd{display:flex;gap:10px;align-items:center;border-bottom:3px solid #0b3356;padding-bottom:8px;margin-bottom:10px}
+.pdf h4{margin:0;font-size:15px} .pdf table{font-size:11px} .pdf th,.pdf td{border:1px solid #c5d0dc;white-space:normal;vertical-align:top;color:#15222a}
+.pdf th{background:#eaf0f6;width:34%}
 .center{display:flex;flex-direction:column;gap:14px;padding-top:16px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -1758,6 +1758,7 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localh
 (function(){
   const CONFIGURED = !String(FIREBASE_CONFIG.apiKey).includes("PEGA_AQUI");
   let fbApp = null, auth = null, fs = null, isAdminFlag = false, registering = false, started = false, mode = "login";
+  let pubList = null, pubSel = "";
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const toastMsg = m => { const t = $("#toast"); t.textContent = m; t.hidden = false; clearTimeout(toastMsg.t); toastMsg.t = setTimeout(() => t.hidden = true, 3600); };
@@ -1804,11 +1805,26 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localh
       <div class="field"><label for="cr-o">Soy personal de</label><select class="inp" id="cr-o"><option value="principal">Empresa principal</option><option value="contratista">Contratista</option></select></div>
       <div class="field"><label for="cr-em">Empresa <span class="req">*</span></label><input class="inp" id="cr-em"></div>
       <div class="field"><label for="cr-pu">Puesto</label><input class="inp" id="cr-pu" placeholder="Ej. Supervisor de seguridad"></div>
+      <div id="cr-pjbox">${projBox()}</div>
       <div class="field"><label for="cr-r">Rol solicitado</label><select class="inp" id="cr-r"><option value="supervisor">Supervisor de campo (registra)</option><option value="visor">Visor (consulta tablero y reportes)</option></select></div>
       <button class="btn primary" type="submit" id="cr-btn">Crear mi cuenta</button></form>`}
     ${matchMedia("(display-mode: standalone)").matches ? "" : `<div class="card"><h3>Instala la app en tu celular</h3><button type="button" class="btn primary" id="cl-install" ${window.__ehsInstall ? "" : "hidden"} onclick="ehsInstall()">Instalar app</button><div class="small muted"><b>Android:</b> si no ves el botón, en Chrome toca el menú ⋮ y elige <b>Instalar app</b> o <b>Agregar a pantalla principal</b>.<br><b>iPhone:</b> en Safari toca Compartir ⬆️ y elige <b>Agregar a inicio</b>.</div></div>`}<div class="muted small" style="text-align:center;margin-top:4px">Elaborado por José Alfredo González García</div></div>`;
   }
-  function showAuth(){ shell(); $("#app").innerHTML = viewLogin(); }
+  // Proyectos para el registro (lista pública: solo nombre y enlace del aviso de privacidad).
+  function projBox(){
+    if (pubList === null) return `<div class="help">Cargando proyectos…</div>`;
+    if (!pubList.length) return `<input type="hidden" id="cr-pj" value=""><div class="help">El administrador te asignará tu proyecto.</div>`;
+    const sel = pubList.find(p => p.id === pubSel) || pubList[0]; pubSel = sel.id;
+    return `<div class="field"><label for="cr-pj">Proyecto al que perteneces <span class="req">*</span></label><select class="inp" id="cr-pj">${pubList.map(p => `<option value="${esc(p.id)}" ${p.id === sel.id ? "selected" : ""}>${esc(p.nombre)}</option>`).join("")}</select></div>
+      ${sel.aviso ? `<div class="card" style="gap:8px"><a class="btn sm" href="${esc(sel.aviso)}" target="_blank" rel="noopener">Leer aviso de privacidad ↗</a><label class="row" style="flex-wrap:nowrap;cursor:pointer;align-items:flex-start"><input type="checkbox" id="cr-av" style="width:22px;height:22px;flex:none;accent-color:var(--accent);margin-top:1px"><span>He leído y acepto el aviso de privacidad del proyecto <b>${esc(sel.nombre)}</b>. <span class="req">*</span></span></label></div>` : `<div class="help">Este proyecto aún no tiene aviso de privacidad cargado. Lo aceptarás al entrar cuando el administrador lo agregue.</div>`}`;
+  }
+  async function loadPub(){
+    try { const s = await FB.getDocs(FB.collection(fs, "pub")); pubList = s.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.active !== false && p.nombre).sort((a, b) => a.nombre.localeCompare(b.nombre)); }
+    catch (e) { pubList = []; }
+    const box = $("#cr-pjbox"); if (box) box.innerHTML = projBox();
+  }
+  document.addEventListener("change", e => { if (e.target.id === "cr-pj") { pubSel = e.target.value; const box = $("#cr-pjbox"); if (box) box.innerHTML = projBox(); } });
+  function showAuth(){ shell(); $("#app").innerHTML = viewLogin(); if (mode === "registro" && pubList === null) loadPub(); }
   function showMsg(title, text){ shell(); $("#app").innerHTML = `<div class="center">${brand}<div class="card"><h2>${esc(title)}</h2><div class="muted">${text}</div></div></div>`; }
 
   document.addEventListener("click", e => {
@@ -1832,6 +1848,9 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localh
         const pw = $("#cr-p").value;
         if (!d.nombre || !d.email || !d.empresa) { toastMsg("Completa nombre, correo y empresa."); return; }
         if (pw.length < 6) { toastMsg("La contraseña debe tener al menos 6 caracteres."); return; }
+        const pj = $("#cr-pj"), pjSel = (pubList || []).find(p => pj && p.id === pj.value) || null;
+        if (pubList && pubList.length && !pjSel) { toastMsg("Elige tu proyecto."); return; }
+        if (pjSel && pjSel.aviso && !($("#cr-av") && $("#cr-av").checked)) { toastMsg("Para registrarte acepta el aviso de privacidad del proyecto."); return; }
         $("#cr-btn").disabled = true; registering = true;
         const cred = await FB.createUserWithEmailAndPassword(auth, d.email, pw);
         await FB.updateProfile(cred.user, { displayName: d.nombre });
@@ -1843,7 +1862,8 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localh
           await FB.setDoc(FB.doc(fs, "members", uid), { nombre: d.nombre, email: d.email, telefono: d.telefono, empresa: d.empresa, origen: "principal", puesto: d.puesto, role: "admin", projects: [], active: true, rejected: false, createdAt: now });
           toastMsg("Cuenta de administrador creada.");
         } else {
-          await FB.setDoc(FB.doc(fs, "requests", uid), { ...d, projectId: "", createdAt: now });
+          await FB.setDoc(FB.doc(fs, "requests", uid), { ...d, projectId: pjSel ? pjSel.id : "", avisoOk: pjSel && pjSel.aviso ? now : "", createdAt: now });
+          if (pjSel && pjSel.aviso) await FB.setDoc(FB.doc(fs, "consents", uid + "_" + pjSel.id + "_" + Date.now().toString(36)), { uid, pid: pjSel.id, url: pjSel.aviso, proyecto: pjSel.nombre, nombre: d.nombre, email: d.email, at: now, via: "registro" }).catch(e => console.warn(e));
           toastMsg("Cuenta creada. Espera la aprobación del administrador.");
         }
         registering = false; startFor(cred.user);
@@ -2045,17 +2065,25 @@ function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 
 /* ===================== Estado ===================== */
 const S={db:null,user:null,dl:null,uid:null,meName:"",isAdmin:false,status:"loading",
- projects:{},members:{},requests:{},records:[],media:{},history:{},histState:null,loaded:{p:0,m:0,q:0,r:0},
+ projects:{},members:{},requests:{},reqOwn:null,reqProj:{},pub:{},myCons:{},consents:{},records:[],media:{},history:{},histState:null,loaded:{p:0,m:0,q:0,r:0,c:0},
  tab:null,stack:[],form:null,projectId:lsGet("ehs.project"),editProject:null,adminSeg:"usuarios",reqId:null,ap:null,
  outbox:(()=>{try{return JSON.parse(lsGet("ehs.outbox")||"[]")}catch(e){return[]}})(),online:navigator.onLine,
  f:{proj:"all",period:"30",type:"all",status:"all",q:""},port:{who:"",from:localD(new Date(Date.now()-30*864e5)),to:localD()},seen:null};
 const member=()=>S.members[S.uid];
 const ORG={principal:"Empresa principal",contratista:"Contratista"};
-const ROLE_L={supervisor:"Supervisor",lider:"Supervisor líder",visor:"Visor",admin:"Administrador"};
+const ROLE_L={supervisor:"Supervisor",lider:"Supervisor líder",visor:"Visor",padmin:"Administrador de proyecto",admin:"Administrador general"};
+const STAFF=["supervisor","lider","visor"];
 function recOrg(r){const m=S.members[r.authorId];return r.authorOrigen||(m&&m.origen)||"principal"}
 function recEmp(r){const m=S.members[r.authorId];return r.authorEmpresa||(m&&m.empresa)||""}
 function orgLabel(o,emp){return (ORG[o]||ORG.principal)+(o==="contratista"&&emp?" · "+emp:"")}
 function role(){if(S.isAdmin)return"admin";const m=member();if(m&&m.active&&!m.rejected)return m.role||"supervisor";return null}
+function isPA(){return role()==="padmin"}
+function myPids(){return myProjects().map(p=>p.id)}
+// Administrador general: todo. Administrador de proyecto: solo sus proyectos.
+function canManage(pid){return S.isAdmin||(isPA()&&myPids().includes(pid))}
+function seesAll(){const r=role();return r==="admin"||r==="lider"||r==="padmin"}
+// Un administrador de proyecto solo modifica usuarios de captura cuyos proyectos sean todos suyos.
+function canEditUser(m){if(S.isAdmin)return true;if(!isPA()||!m)return false;if(m.id===S.uid||!STAFF.includes(m.role||"supervisor"))return false;const ps=m.projects||[];return !ps.length?false:ps.every(x=>myPids().includes(x))}
 function authorName(){const m=member();return(m&&m.nombre)||S.meName||(S.isAdmin?"Administrador":"Supervisor")}
 function allProjects(){return Object.values(S.projects).filter(p=>p.active!==false).sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||""))}
 function myProjects(){if(S.isAdmin)return allProjects();const ids=(member()&&member().projects)||[];return allProjects().filter(p=>ids.includes(p.id))}
@@ -2099,10 +2127,12 @@ async function boot(){
   if(!first)alertNew(s);
   schedule();
  };
- db.collection("projects").onSnapshot(s=>{S.projects={};s.docs.forEach(d=>S.projects[d.id]={id:d.id,...d.data()});S.loaded.p=1;schedule()},err);
+ db.collection("projects").onSnapshot(s=>{S.projects={};s.docs.forEach(d=>S.projects[d.id]={id:d.id,...d.data()});S.loaded.p=1;if(S.subTeam){S.subTeam();S.subCons()}if(S.isAdmin)syncSoon();schedule()},err);
  if(S.isAdmin){
-  db.collection("members").onSnapshot(s=>{S.members={};s.docs.forEach(d=>S.members[d.id]={id:d.id,...d.data()});S.loaded.m=1;schedule()},err);
+  db.collection("members").onSnapshot(s=>{S.members={};s.docs.forEach(d=>S.members[d.id]={id:d.id,...d.data()});S.loaded.m=1;syncSoon();schedule()},err);
   db.collection("requests").onSnapshot(s=>{S.requests={};s.docs.forEach(d=>S.requests[d.id]={id:d.id,...d.data()});S.loaded.q=1;schedule()},err);
+  db.collection("consents").onSnapshot(s=>{S.consents={};s.docs.forEach(d=>addCons(S.consents,d.data(),1));S.loaded.c=1;schedule()},e=>{console.warn(e);S.loaded.c=1;schedule()});
+  db.collection("pub").onSnapshot(s=>{S.pub={};s.docs.forEach(d=>S.pub[d.id]=d.data());S.pubLoaded=1;syncSoon()},e=>console.warn(e));
   multiSub(windowMonths().map(ym=>[ym,db.collection("records").where("ym","==",ym)]),onRecs,err);
   setTimeout(migrateV15,1200);
  }else{
@@ -2113,12 +2143,48 @@ async function boot(){
    ids.forEach(pid=>{yms.forEach(ym=>{let q=db.collection("records").where("projectId","==",pid);if(r==="supervisor")q=q.where("authorId","==",S.uid);qs.push([pid+ym,q.where("ym","==",ym)])});
     if(r==="supervisor")qs.push([pid+"open",db.collection("records").where("projectId","==",pid).where("type","==","hallazgo").where("status","==","abierto")])});
    recUnsub=multiSub(qs,onRecs,err)};
-  db.doc("members/"+S.uid).onSnapshot(d=>{S.members=d.exists?{[S.uid]:{id:S.uid,...d.data()}}:{};S.loaded.m=1;subRecords();schedule()},()=>{S.members={};S.loaded.m=1;subRecords();schedule()});
-  db.doc("requests/"+S.uid).onSnapshot(d=>{S.requests=d.exists?{[S.uid]:{id:S.uid,...d.data()}}:{};S.loaded.q=1;schedule()},()=>{S.requests={};S.loaded.q=1;schedule()});
+  // Administrador de proyecto: también las fichas y solicitudes de los usuarios de sus proyectos.
+  const memSubs={};let reqUnsub=null,reqKey=null;
+  const subTeam=()=>{const pa=role()==="padmin",pids=pa?myPids().slice(0,30):[];
+   const want=new Set();if(pa)myProjects().forEach(p=>(p.uids||[]).forEach(u=>{if(u!==S.uid)want.add(u)}));
+   Object.keys(memSubs).forEach(u=>{if(!want.has(u)){memSubs[u]();delete memSubs[u];delete S.members[u]}});
+   want.forEach(u=>{if(memSubs[u])return;memSubs[u]=db.doc("members/"+u).onSnapshot(d=>{if(d.exists)S.members[u]={id:u,...d.data()};else delete S.members[u];schedule()},()=>{delete S.members[u];schedule()})});
+   const k=pids.join(",");if(k===reqKey)return;reqKey=k;if(reqUnsub)reqUnsub();reqUnsub=null;S.reqProj={};mergeReqs();
+   if(pids.length)reqUnsub=multiSub(pids.map(pid=>[pid,db.collection("requests").where("projectId","==",pid)]),s=>{S.reqProj={};s.docs.forEach(d=>S.reqProj[d.id]={id:d.id,...d.data()});mergeReqs();schedule()},err)};
+  S.subTeam=subTeam;
+  db.doc("members/"+S.uid).onSnapshot(d=>{if(d.exists)S.members[S.uid]={id:S.uid,...d.data()};else delete S.members[S.uid];S.loaded.m=1;subRecords();subTeam();subCons();schedule()},()=>{delete S.members[S.uid];S.loaded.m=1;subRecords();subTeam();schedule()});
+  db.doc("requests/"+S.uid).onSnapshot(d=>{S.reqOwn=d.exists?{id:S.uid,...d.data()}:null;mergeReqs();S.loaded.q=1;schedule()},()=>{S.reqOwn=null;mergeReqs();S.loaded.q=1;schedule()});
+  // Aceptaciones del aviso de privacidad: las propias y, para el administrador de proyecto, las de su equipo.
+  db.collection("consents").where("uid","==",S.uid).onSnapshot(s=>{S.myCons={};s.docs.forEach(d=>addCons(S.myCons,d.data()));S.loaded.c=1;schedule()},e=>{console.warn(e);S.loaded.c=1;schedule()});
+  let consUnsub=null,consKey=null;
+  const subCons=()=>{const pids=role()==="padmin"?myPids().slice(0,30):[];const k=pids.join(",");if(k===consKey)return;consKey=k;if(consUnsub)consUnsub();consUnsub=null;S.consents={};
+   if(pids.length)consUnsub=multiSub(pids.map(pid=>[pid,db.collection("consents").where("pid","==",pid)]),s=>{S.consents={};s.docs.forEach(d=>addCons(S.consents,d.data(),1));schedule()},err)};
+  S.subCons=subCons;
  }
  S.status="ready";render();
  if(S.outbox.length)setTimeout(flush,1500);
 }
+function mergeReqs(){S.requests={...S.reqProj};if(S.reqOwn)S.requests[S.uid]=S.reqOwn}
+// Guarda la aceptación más reciente por proyecto (y por usuario cuando son varias personas).
+function addCons(map,c,byUser){if(!c||!c.pid)return;const k=byUser?c.uid+"|"+c.pid:c.pid;if(!map[k]||String(c.at)>String(map[k].at))map[k]=c}
+// El administrador general mantiene al día: la lista pública de proyectos (para el registro) y quién está en cada proyecto.
+let syncT=0;function syncSoon(){if(!S.isAdmin)return;clearTimeout(syncT);syncT=setTimeout(syncAdmin,1500)}
+async function syncAdmin(){if(!S.isAdmin||!S.loaded.p||!S.loaded.m||!S.pubLoaded||syncAdmin.busy)return;syncAdmin.busy=true;try{
+ const ms=Object.values(S.members).filter(m=>m.role!=="admin");
+ for(const p of Object.values(S.projects)){
+  const uids=ms.filter(m=>(m.projects||[]).includes(p.id)).map(m=>m.id).sort();
+  if(JSON.stringify(uids)!==JSON.stringify((p.uids||[]).slice().sort()))await S.db.doc("projects/"+p.id).update({uids});
+  const want={nombre:p.nombre||"",aviso:p.aviso||"",active:p.active!==false},have=S.pub[p.id]||{};
+  if(want.nombre!==have.nombre||want.aviso!==(have.aviso||"")||want.active!==have.active)await S.db.doc("pub/"+p.id).set(want)}
+ for(const id of Object.keys(S.pub))if(!S.projects[id])await S.db.doc("pub/"+id).delete();
+}catch(e){console.warn("sync",e)}syncAdmin.busy=false}
+// Tras aprobar, crear o quitar un usuario, el administrador de proyecto actualiza la lista de su equipo.
+async function touchUids(uid,projects){if(S.isAdmin){syncSoon();return}for(const p of myProjects()){const has=(projects||[]).includes(p.id),arr=p.uids||[];if(has===arr.includes(uid))continue;const uids=has?arr.concat(uid):arr.filter(x=>x!==uid);try{await S.db.doc("projects/"+p.id).update({uids})}catch(e){console.warn(e)}}}
+// Aviso de privacidad pendiente de aceptar (todos menos el administrador general).
+function pendingAvisos(){if(S.isAdmin||!S.loaded.c)return[];return myProjects().filter(p=>p.aviso&&!(S.myCons[p.id]&&S.myCons[p.id].url===p.aviso))}
+async function acceptAviso(pid,via){const p=S.projects[pid];if(!p||!p.aviso)return;const m=member()||{};const c={uid:S.uid,pid,url:p.aviso,proyecto:p.nombre||"",nombre:m.nombre||S.meName||"",email:m.email||(window.cloud&&cloud.email())||"",at:new Date().toISOString(),via:via||"app"};
+ addCons(S.myCons,c);render(true);
+ try{await S.db.collection("consents").doc(S.uid+"_"+pid+"_"+Date.now().toString(36)).set(c)}catch(e){delete S.myCons[pid];render(true);toast("No se pudo registrar tu aceptación. Revisa tu conexión o avisa al administrador.")}}
 // Aviso dentro de la app cuando llega un accidente o hallazgo de riesgo alto nuevo (administrador y visores).
 // Une varias consultas en vivo en una sola lista (sin duplicados).
 function multiSub(qs,cb,err){const per={};let last=null;const subs=qs.map(([k,q])=>q.onSnapshot(x=>{per[k]=x.docs;last=x;if(Object.keys(per).length<qs.length)return;const seen={};qs.forEach(([kk])=>(per[kk]||[]).forEach(d=>seen[d.id]=d));cb({docs:Object.values(seen),docChanges:()=>last&&last.docChanges?last.docChanges():[],metadata:(last&&last.metadata)||{}})},e=>{per[k]=[];err&&err(e);if(Object.keys(per).length===qs.length){const seen={};qs.forEach(([kk])=>(per[kk]||[]).forEach(d=>seen[d.id]=d));cb({docs:Object.values(seen),docChanges:()=>[],metadata:{}})}}));return()=>subs.forEach(u=>u&&u())}
@@ -2128,7 +2194,7 @@ async function migrateV15(){if(!S.isAdmin||migrateV15.busy||migrateV15.done)retu
  let k=0;for(const r of todo){const{id,...doc}=r;await writeRecord(id,doc);k++;if(todo.length>5&&k%10===0)toast(`Optimizando registros anteriores… ${k} de ${todo.length}`)}
  if(!f)await S.db.doc("config/migr").set({v:15,at:new Date().toISOString(),n:todo.length});if(todo.length)toast(`Listo: ${todo.length} registro${todo.length>1?"s":""} optimizado${todo.length>1?"s":""}`);migrateV15.done=true}catch(e){console.warn("migración",e)}migrateV15.busy=false}
 function alertNew(s){
- const r=role();if(r!=="admin"&&r!=="visor"&&r!=="lider")return;
+ const r=role();if(r==="supervisor"||!r)return;
  const ids=myProjects().map(p=>p.id);
  s.docChanges().filter(c=>c.type==="added").map(c=>({id:c.doc.id,...c.doc.data()})).forEach(rec=>{
   if(rec.authorId===S.uid||!ids.includes(rec.projectId))return;
@@ -2158,7 +2224,8 @@ const TABS={
  supervisor:[["campo","Campo","home"],["registros","Mis registros","list"],["mas","Más","more"]],
  admin:[["dashboard","Tablero","chart"],["campo","Campo","home"],["registros","Registros","list"],["admin","Administrar","users"],["mas","Más","more"]],
  visor:[["dashboard","Tablero","chart"],["registros","Registros","list"],["mas","Más","more"]],
- lider:[["dashboard","Tablero","chart"],["campo","Campo","home"],["registros","Registros","list"],["mas","Más","more"]]
+ lider:[["dashboard","Tablero","chart"],["campo","Campo","home"],["registros","Registros","list"],["mas","Más","more"]],
+ padmin:[["dashboard","Tablero","chart"],["campo","Campo","home"],["registros","Registros","list"],["admin","Administrar","users"],["mas","Más","more"]]
 };
 const ICONS={
  home:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
@@ -2182,7 +2249,7 @@ function renderChrome(){
  const tb=$("#tabbar");
  if(!r||!S.loaded.r){tb.hidden=true;return}
  tb.hidden=false;
- const pend=r==="admin"?pendingRequests().length:0;
+ const pend=(r==="admin"||r==="padmin")?pendingRequests().length:0;
  const unack=r!=="supervisor"?visible().filter(x=>x.type==="accidente"&&!x.ack&&!x.pending).length:0;
  const cur=sub?(S.stack[0]||S.tab):S.tab;
  tb.innerHTML=TABS[r].map(([k,l,ic])=>{const b=k==="admin"?pend:k==="dashboard"?unack:k==="mas"?S.outbox.length:0;return`<button data-act="tab" data-v="${k}" ${cur===k?'aria-current="page"':""}><span class="tic">${svg(ic)}</span>${l}${b?`<span class="tbadge">${b}</span>`:""}</button>`}).join("");
@@ -2192,9 +2259,11 @@ function render(top){
  if(S.status==="loading"){renderChrome();app.innerHTML=`<div class="empty">Conectando…</div>`;return}
  if(S.status==="nodb"){renderChrome();app.innerHTML=`<div class="center"><h1>Sin conexión con el servidor</h1><p class="muted">Revisa tu internet y vuelve a abrir la app.</p></div>`;return}
  if(S.status==="noid"){renderChrome();app.innerHTML=`<div class="center"><h1>Inicia sesión</h1><p class="muted">Inicia sesión en claude.ai con la cuenta a la que se compartió esta app.</p></div>`;return}
- if(!(S.loaded.p&&S.loaded.m&&S.loaded.q&&S.loaded.r)){renderChrome();app.innerHTML=`<div class="empty">Cargando registros…</div>`;return}
+ if(!(S.loaded.p&&S.loaded.m&&S.loaded.q&&S.loaded.r&&S.loaded.c)){renderChrome();app.innerHTML=`<div class="empty">Cargando registros…</div>`;return}
  const r=role();
  if(!r){if(S.tab!=="registro")S.tab=null;renderChrome();app.innerHTML=S.tab==="registro"?viewRegister():viewAccess();return}
+ const av=pendingAvisos();
+ if(av.length){S.tab=null;S.stack=[];renderChrome();$("#tabbar").hidden=true;app.innerHTML=viewAviso(av[0],av.length);$("#scroll").scrollTop=0;return}
  const valid=TABS[r].map(x=>x[0]).concat(SUBS);
  if(!S.tab||!valid.includes(S.tab)||(S.tab==="form"&&!S.form)||(S.tab==="proyecto"&&!S.editProject))S.tab=TABS[r][0][0];
  renderChrome();
@@ -2218,7 +2287,7 @@ function viewAccess0(){
  <button class="btn primary" data-act="reg-open">Solicitar acceso</button>${installCard()}</div>`;
 }
 function viewRegister(){
- const v=S.requests[S.uid]||{},ps=allProjects();
+ const v=S.requests[S.uid]||{},ps=allProjects();if(!S.rgProj&&ps.length)S.rgProj=(ps.find(p=>p.id===v.projectId)||ps[0]).id;
  return`<form class="form" id="regForm" novalidate>
  <div class="field"><label for="rg-nombre">Nombre completo <span class="req">*</span></label><input class="inp" id="rg-nombre" value="${esc(v.nombre||S.meName)}" autocomplete="name"></div>
  <div class="field"><label for="rg-email">Correo corporativo <span class="req">*</span></label><input class="inp" id="rg-email" type="email" value="${esc(v.email||"")}" autocomplete="email"></div>
@@ -2226,7 +2295,8 @@ function viewRegister(){
  <div class="field"><label for="rg-org">Soy personal de</label><select class="inp" id="rg-org"><option value="principal">Empresa principal</option><option value="contratista" ${v.origen==="contratista"?"selected":""}>Contratista</option></select></div>
  <div class="field"><label for="rg-emp">Empresa <span class="req">*</span></label><input class="inp" id="rg-emp" value="${esc(v.empresa||"")}"></div>
  <div class="field"><label for="rg-puesto">Puesto</label><input class="inp" id="rg-puesto" value="${esc(v.puesto||"")}"></div>
- <div class="field"><label for="rg-proj">Proyecto al que perteneces</label>${ps.length?`<select class="inp" id="rg-proj">${ps.map(p=>`<option value="${esc(p.id)}" ${v.projectId===p.id?"selected":""}>${esc(p.nombre)}</option>`).join("")}</select>`:`<input type="hidden" id="rg-proj" value=""><div class="help">El administrador te asignará un proyecto.</div>`}</div>
+ <div class="field"><label for="rg-proj">Proyecto al que perteneces</label>${ps.length?`<select class="inp" id="rg-proj" data-chg="rgproj">${ps.map(p=>`<option value="${esc(p.id)}" ${(S.rgProj||v.projectId)===p.id?"selected":""}>${esc(p.nombre)}</option>`).join("")}</select>`:`<input type="hidden" id="rg-proj" value=""><div class="help">El administrador te asignará un proyecto.</div>`}</div>
+ ${(()=>{const pp=S.projects[S.rgProj||v.projectId]||ps[0];return pp&&pp.aviso?`<div class="card">${avisoLink(pp)}<label class="row" style="flex-wrap:nowrap;cursor:pointer;align-items:flex-start"><input type="checkbox" id="rg-av" style="width:22px;height:22px;flex:none;accent-color:var(--accent);margin-top:1px"><span>He leído y acepto el aviso de privacidad del proyecto.</span></label></div>`:""})()}
  <div class="field"><label for="rg-rol">Rol solicitado</label><select class="inp" id="rg-rol"><option value="supervisor">Supervisor de campo (registra)</option><option value="visor" ${v.rol==="visor"?"selected":""}>Visor (consulta tablero y reportes)</option></select></div>
  <button class="btn primary" type="submit">Enviar solicitud</button></form>`;
 }
@@ -2234,9 +2304,18 @@ async function submitRegister(e){
  e.preventDefault();
  const d={nombre:$("#rg-nombre").value.trim(),email:$("#rg-email").value.trim(),telefono:$("#rg-tel").value.trim(),empresa:$("#rg-emp").value.trim(),origen:$("#rg-org").value,puesto:$("#rg-puesto").value.trim(),projectId:$("#rg-proj").value,rol:$("#rg-rol").value,createdAt:new Date().toISOString()};
  if(!d.nombre||!d.email||!d.empresa){toast("Completa nombre, correo y empresa.");return}
- try{await S.db.doc("requests/"+S.uid).set(d);S.tab=null;toast("Solicitud enviada");render(true)}
+ const pp=S.projects[d.projectId],av=$("#rg-av");if(pp&&pp.aviso){if(!av||!av.checked){toast("Acepta el aviso de privacidad del proyecto.");return}d.avisoOk=new Date().toISOString()}
+ try{await S.db.doc("requests/"+S.uid).set(d);if(pp&&pp.aviso)S.db.collection("consents").doc(S.uid+"_"+pp.id+"_"+Date.now().toString(36)).set({uid:S.uid,pid:pp.id,url:pp.aviso,proyecto:pp.nombre||"",nombre:d.nombre,email:d.email,at:d.avisoOk,via:"registro"}).catch(e=>console.warn(e));S.tab=null;toast("Solicitud enviada");render(true)}
  catch(err){toast(err&&err.code==="invalid_argument"?"Pide al administrador que te comparta la app como Colaborador para poder registrarte.":"No se pudo enviar. Intenta de nuevo.")}
 }
+function avisoLink(p,label){return`<a class="btn sm" href="${esc(p.aviso)}" target="_blank" rel="noopener">${label||"Leer aviso de privacidad"} ↗</a>`}
+function viewAviso(p,n){const prev=S.myCons[p.id];
+ return`<div class="center"><span class="ey">Aviso de privacidad${n>1?` · ${n} proyectos por aceptar`:""}</span><h1>${esc(p.nombre)}</h1>
+ <p class="muted">${prev?"El aviso de privacidad de este proyecto se actualizó. Léelo y acéptalo de nuevo para seguir usando la app.":"Antes de usar la app en este proyecto, lee el aviso de privacidad. Explica qué datos personales se recaban (nombre, correo, teléfono, firmas y fotografías), para qué se usan y cómo ejercer tus derechos ARCO."}</p>
+ <div class="card">${avisoLink(p)}
+ <label class="row" style="flex-wrap:nowrap;cursor:pointer;align-items:flex-start"><input type="checkbox" id="av-ok" style="width:22px;height:22px;flex:none;accent-color:var(--accent);margin-top:1px"><span>He leído y acepto el aviso de privacidad de <b>${esc(p.nombre)}</b>.</span></label>
+ <button class="btn primary" data-act="av-accept" data-v="${esc(p.id)}">Aceptar y continuar</button></div>
+ <button class="btn ghost" data-act="logout">Cerrar sesión</button></div>`}
 function installCard(){return`<div class="card"><h3>Úsala como app en tu celular</h3><div class="small muted">Abre este enlace en Chrome, toca el menú ⋮ y elige <b>Agregar a pantalla principal</b>. Te queda un ícono como cualquier app.</div></div>`}
 
 /* ===================== Campo ===================== */
@@ -2255,7 +2334,7 @@ function viewCampo(){
  const mine=allRecords().filter(r=>r.projectId===p.id&&r.authorId===S.uid);
  const done=new Set(mine.filter(r=>r.day===today).map(r=>r.type));
  const steps=DAY_STEPS.filter(k=>mods.some(m=>m.k===k));
- const open=allRecords().filter(r=>r.projectId===p.id&&isOpen(r)&&(S.isAdmin||role()==="lider"||r.authorId===S.uid)).slice(0,5);
+ const open=allRecords().filter(r=>r.projectId===p.id&&isOpen(r)&&(seesAll()||r.authorId===S.uid)).slice(0,5);
  return`${syncBanner()}
  <div class="proj"><div class="logo">${p.logo?`<img src="${esc(p.logo)}" alt="">`:esc((p.nombre||"?").slice(0,2).toUpperCase())}</div><div style="min-width:0;flex:1"><h2>${esc(p.nombre)}</h2><div class="muted small">${esc(p.cliente||"")}</div></div></div>
  ${ps.length>1?`<select class="inp" data-chg="proj" aria-label="Proyecto activo">${ps.map(x=>`<option value="${esc(x.id)}" ${x.id===p.id?"selected":""}>${esc(x.nombre)}</option>`).join("")}</select>`:""}
@@ -2414,14 +2493,14 @@ function openRecord(id,again){
  $("#pushHost").innerHTML="";
  const raw=findRec(id);if(!raw){toast("Registro no encontrado.");return}const r=withMedia(raw);S.openRec=id;
  if(needsMedia(raw)&&!again)loadMedia([id]).then(ok=>{if(S.openRec===id&&!$("#modal").hidden&&S.media[id])openRecord(id,true);else if(!ok&&S.openRec===id)toast("Sin señal: las fotos se verán al reconectar.")});const m=MOD[r.type],v=r.values||{},p=S.projects[r.projectId];
- const canClose=!r.pending&&isOpen(r)&&(S.isAdmin||r.authorId===S.uid);
+ const canClose=!r.pending&&isOpen(r)&&(canManage(r.projectId)||r.authorId===S.uid);
  openModal(`<div class="sheet-head"><div class="row" style="flex-wrap:nowrap;gap:10px"><span class="code c-${m.code}">${m.code}</span><div><div class="ey">${esc(r.folio)}</div><h2>${esc(m.name)}</h2></div></div><button class="btn sm ghost" data-act="close">Cerrar</button></div>
  ${r.pending?`<div class="notice warn">Guardado en este teléfono. Se enviará al recuperar señal.</div>`:""}
  <div class="card"><dl class="kv"><dt>Proyecto</dt><dd>${esc(projName(r.projectId))}</dd><dt>Registró</dt><dd>${esc(r.authorName)} · ${esc(orgLabel(recOrg(r),recEmp(r)))} · ${fmtDT(r.createdAt)}</dd>
  ${fieldsFor(m,p).map(f=>{const x=v[f.k];if(x==null||x===""||(Array.isArray(x)&&!x.length))return"";return`<dt>${esc(f.label)}</dt><dd>${valueHTML(f,x)}</dd>`}).join("")}
  ${r.status==="cerrado"?`<dt>Cierre</dt><dd>${fmtDT(r.closedAt)} · ${esc(r.closedBy||"")}\n${esc(r.closeNote||"")}</dd>`:""}${r.ack?`<dt>Enterado</dt><dd>${fmtDT(r.ack.at)} · ${esc(r.ack.by)}</dd>`:""}</dl></div>
  ${canClose?`<div class="card"><div class="field"><label for="cl-note">Cerrar hallazgo: acción implementada</label><textarea class="inp" id="cl-note" placeholder="Describe qué se hizo para corregirlo"></textarea></div><div><button class="btn primary sm" data-act="close-h" data-v="${esc(r.id)}">Cerrar hallazgo</button></div></div>`:""}
- <div class="row">${!r.pending?`<button class="btn sm" data-act="pdf" data-v="${esc(r.id)}">Ver reporte</button>`:""}${(r.type==="accidente"||(r.type==="hallazgo"&&v.riesgo==="Alto"))?`<button class="btn sm" data-act="notify" data-v="${esc(r.id)}">Enviar aviso</button>`:""}${S.isAdmin&&r.type==="accidente"&&!r.ack&&!r.pending?`<button class="btn sm primary" data-act="ack" data-v="${esc(r.id)}">Marcar como enterado</button>`:""}<span class="spacer"></span>${S.isAdmin&&!r.pending?`<button class="btn sm ghost" data-act="del-rec">Eliminar</button>`:""}</div>
+ <div class="row">${!r.pending?`<button class="btn sm" data-act="pdf" data-v="${esc(r.id)}">Ver reporte</button>`:""}${(r.type==="accidente"||(r.type==="hallazgo"&&v.riesgo==="Alto"))?`<button class="btn sm" data-act="notify" data-v="${esc(r.id)}">Enviar aviso</button>`:""}${canManage(r.projectId)&&r.type==="accidente"&&!r.ack&&!r.pending?`<button class="btn sm primary" data-act="ack" data-v="${esc(r.id)}">Marcar como enterado</button>`:""}<span class="spacer"></span>${canManage(r.projectId)&&!r.pending?`<button class="btn sm ghost" data-act="del-rec">Eliminar</button>`:""}</div>
  <div id="delConfirm" hidden class="notice bad"><div>¿Eliminar ${esc(r.folio)}? No se puede deshacer.</div><div class="row" style="margin-top:8px"><button class="btn sm" data-act="del-no">No</button><button class="btn sm danger" data-act="del-yes" data-v="${esc(r.id)}">Eliminar</button></div></div>`);
 }
 
@@ -2436,7 +2515,7 @@ function plainVal(f,v){if(v==null||v==="")return"—";switch(f.t){case"datetime"
  return`<span style="white-space:pre-wrap">${esc(v)}</span>`}
 function recBlock(r){r=withMedia(r);const m=MOD[r.type],p=S.projects[r.projectId],v=r.values||{};
  return`<div class="rec"><h3 style="font-size:13px;margin:14px 0 6px">${esc(m.name)} · ${esc(r.folio)}</h3><table style="border-collapse:collapse;width:100%"><tr><th>Proyecto</th><td>${esc(projName(r.projectId))}</td></tr><tr><th>Elaboró</th><td>${esc(r.authorName)}</td></tr><tr><th>Fecha de registro</th><td>${fmtDT(r.createdAt)}</td></tr>${r.type==="hallazgo"?`<tr><th>Estado</th><td>${r.status==="cerrado"?"Cerrado "+fmtDT(r.closedAt)+" · "+esc(r.closeNote||""):"Abierto"}</td></tr>`:""}${fieldsFor(m,p).filter(f=>v[f.k]!=null&&v[f.k]!==""&&!(Array.isArray(v[f.k])&&!v[f.k].length)).map(f=>`<tr><th>${esc(f.label)}</th><td>${plainVal(f,v[f.k])}</td></tr>`).join("")}</table></div>`}
-const DOC_CSS=`body{font-family:Arial,Helvetica,sans-serif;color:#15222a;margin:24px;font-size:12px}h1{font-size:19px;margin:0}h2{font-size:14px;margin:20px 0 6px;border-bottom:2px solid #0b6b53;padding-bottom:3px}.hd{display:flex;gap:14px;align-items:center;border-bottom:3px solid #15222a;padding-bottom:10px;margin-bottom:12px}.hd img{height:54px}th,td{border:1px solid #c8d0ce;padding:5px 7px;text-align:left;vertical-align:top}th{background:#eef2f1;width:30%}.rec{page-break-inside:avoid}.muted{color:#5a6a70}`;
+const DOC_CSS=`body{font-family:Arial,Helvetica,sans-serif;color:#15222a;margin:24px;font-size:12px}h1{font-size:19px;margin:0}h2{font-size:14px;margin:20px 0 6px;border-bottom:2px solid #0b3356;padding-bottom:3px}.hd{display:flex;gap:14px;align-items:center;border-bottom:3px solid #0b3356;padding-bottom:10px;margin-bottom:12px}.hd img{height:54px}th,td{border:1px solid #c5d0dc;padding:5px 7px;text-align:left;vertical-align:top}th{background:#eaf0f6;width:30%}.rec{page-break-inside:avoid}.muted{color:#5a6a70}`;
 function docShell(title,sub,p,body){return`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>${DOC_CSS}</style></head><body><div class="hd">${p&&p.logo?`<img src="${p.logo}">`:""}<div><h1>${esc(title)}</h1><div class="muted">${esc(sub)}</div></div><img src="${window.COMPANY_LOGO}" alt="OCA Global" style="margin-left:auto;height:46px"></div>${body}<p class="muted" style="margin-top:20px">Generado ${fmtDT(new Date().toISOString())} · Supervisión EHS · Elaborado por José Alfredo González García. Para PDF: abre el archivo y usa Imprimir → Guardar como PDF.</p></body></html>`}
 async function save(filename,data){if(!S.dl){toast("La descarga no está disponible en esta vista.");return}try{await S.dl.save({filename,data});toast("Archivo listo")}catch(e){if(e&&e.code!=="declined")toast("No se pudo descargar el archivo.")}}
 async function openPdf(id){
@@ -2530,34 +2609,39 @@ function drawCharts(){
 
 /* ===================== Administración ===================== */
 function viewAdmin(){
- const reqs=pendingRequests(),mem=Object.values(S.members).filter(m=>m.role!=="admin").sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||""));
- const ps=Object.values(S.projects).sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||""));
+ const pa=!S.isAdmin,reqs=pendingRequests().filter(q=>!pa||q.id!==S.uid),mem=Object.values(S.members).filter(m=>m.role!=="admin"&&m.id!==S.uid).sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||""));
+ const ps=pa?myProjects():Object.values(S.projects).sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||""));
  const ex=S.records.filter(r=>r.ejemplo).length;
  return`<div class="chips"><button class="chip" data-act="aseg" data-v="usuarios" aria-pressed="${S.adminSeg==="usuarios"}">Usuarios${reqs.length?` (${reqs.length} pendiente${reqs.length>1?"s":""})`:""}</button><button class="chip" data-act="aseg" data-v="proyectos" aria-pressed="${S.adminSeg==="proyectos"}">Proyectos</button></div>
- ${S.adminSeg==="usuarios"?`<div class="notice">Comparte el enlace de la app: cada supervisor se registra y su solicitud aparece aquí. Para un cliente o responsable de proyecto, crea su usuario con <b>Crear usuario</b>.</div><button class="btn primary" data-act="user-new">Crear usuario por proyecto</button>
+ ${S.adminSeg==="usuarios"?`<div class="notice">${pa?`Administras: <b>${esc(ps.map(p=>p.nombre).join(", "))}</b>. Aquí aparecen las solicitudes y los usuarios de tus proyectos.`:"Comparte el enlace de la app: cada supervisor se registra y su solicitud aparece aquí. Para un cliente o responsable de proyecto, crea su usuario con <b>Crear usuario</b>."}</div><button class="btn primary" data-act="user-new">Crear usuario por proyecto</button>
  <section class="section"><h2>Solicitudes pendientes</h2>${reqs.length?`<div class="list">${reqs.map(q=>`<button class="item" data-act="req" data-v="${esc(q.id)}"><span class="item-main"><span class="item-t">${esc(q.nombre)}</span><span class="item-m">${esc(q.email)} · ${esc(q.empresa)}</span><span class="item-m">Pide: ${ROLE_L[q.rol]||"Supervisor"} · ${esc(ORG[q.origen]||ORG.principal)} · ${esc(projName(q.projectId))} · ${fmtDT(q.createdAt)}</span></span><span class="btn sm primary">Revisar</span></button>`).join("")}</div>`:`<div class="empty">No hay solicitudes pendientes.</div>`}</section>
- <section class="section"><h2>Usuarios</h2>${mem.length?`<div class="list">${mem.map(m=>`<button class="item" data-act="req" data-v="${esc(m.id)}"><span class="item-main"><span class="item-t">${esc(m.nombre)}</span><span class="item-m">${esc(m.email||"")}</span><span class="item-m">${esc(orgLabel(m.origen||"principal",m.empresa))}</span><span class="item-m">${esc((m.projects||[]).map(projName).join(", "))||"Sin proyectos"}</span></span><span class="pill ${m.rejected?"":!m.active?"red":m.role==="visor"?"blue":m.role==="lider"?"accent":"green"}">${m.rejected?"Rechazado":!m.active?"Suspendido":ROLE_L[m.role]||"Supervisor"}</span></button>`).join("")}</div>`:`<div class="empty">Aún no hay usuarios aprobados.</div>`}</section>`
- :`<section class="section"><div class="shead"><h2>Proyectos</h2><button class="btn sm primary" data-act="proj-edit" data-v="">Nuevo proyecto</button></div>
- ${ex?`<div class="notice warn"><div>Hay ${ex} registros de ejemplo.</div><div style="margin-top:6px"><button class="btn sm" data-act="del-ex">Borrar ejemplos</button></div></div>`:""}
- ${ps.length?`<div class="list">${ps.map(p=>`<button class="item" data-act="proj-edit" data-v="${esc(p.id)}"><div class="logo">${p.logo?`<img src="${esc(p.logo)}" alt="">`:esc((p.nombre||"?").slice(0,2).toUpperCase())}</div><span class="item-main"><span class="item-t">${esc(p.nombre)}</span><span class="item-m">${esc(p.cliente||"")} · ${modsFor(p).length}/${MODS.length} módulos · ${(p.areas||[]).length} áreas</span>${p.active===false?`<span class="pills"><span class="pill">Archivado</span></span>`:""}</span></button>`).join("")}</div>`:`<div class="empty">Sin proyectos todavía.</div>`}</section>`}`;
+ <section class="section"><h2>Usuarios</h2>${mem.length?`<div class="list">${mem.map(m=>`<button class="item" data-act="req" data-v="${esc(m.id)}"><span class="item-main"><span class="item-t">${esc(m.nombre)}</span><span class="item-m">${esc(m.email||"")}</span><span class="item-m">${esc(orgLabel(m.origen||"principal",m.empresa))}</span><span class="item-m">${esc((m.projects||[]).map(projName).join(", "))||"Sin proyectos"}</span></span><span class="pill ${m.rejected?"":!m.active?"red":m.role==="padmin"?"solid":m.role==="lider"?"accent":m.role==="visor"?"":"blue"}">${m.rejected?"Rechazado":!m.active?"Suspendido":ROLE_L[m.role]||"Supervisor"}</span></button>`).join("")}</div>`:`<div class="empty">Aún no hay usuarios aprobados.</div>`}</section>`
+ :`<section class="section"><div class="shead"><h2>${pa?"Tus proyectos":"Proyectos"}</h2>${pa?"":`<button class="btn sm primary" data-act="proj-edit" data-v="">Nuevo proyecto</button>`}</div>
+ ${ex&&!pa?`<div class="notice warn"><div>Hay ${ex} registros de ejemplo.</div><div style="margin-top:6px"><button class="btn sm" data-act="del-ex">Borrar ejemplos</button></div></div>`:""}
+ ${ps.length?`<div class="list">${ps.map(p=>`<button class="item" data-act="proj-edit" data-v="${esc(p.id)}"><div class="logo">${p.logo?`<img src="${esc(p.logo)}" alt="">`:esc((p.nombre||"?").slice(0,2).toUpperCase())}</div><span class="item-main"><span class="item-t">${esc(p.nombre)}</span><span class="item-m">${esc(p.cliente||"")} · ${modsFor(p).length}/${MODS.length} módulos · ${(p.areas||[]).length} áreas</span>${p.aviso?"":`<span class="item-m" style="color:var(--amber)">Falta el aviso de privacidad</span>`}${p.active===false?`<span class="pills"><span class="pill">Archivado</span></span>`:""}</span></button>`).join("")}</div>`:`<div class="empty">Sin proyectos todavía.</div>`}</section>`}`;
 }
 function viewApprove(){
  const id=S.reqId,q=S.requests[id]||{},m=S.members[id]||{},b={...q,...m};
- if(!S.ap)S.ap={role:m.role||q.rol||"supervisor",origen:m.origen||q.origen||"principal",projects:m.projects||(q.projectId?[q.projectId]:[])};
- const isMember=!!S.members[id]&&!m.rejected;
+ if(!S.ap)S.ap={role:m.role||q.rol||"supervisor",origen:m.origen||q.origen||"principal",projects:(m.projects||(q.projectId?[q.projectId]:[])).slice()};
+ const isMember=!!S.members[id]&&!m.rejected,pa=!S.isAdmin;
+ const canEd=S.members[id]?canEditUser({...m,id}):(S.isAdmin||(pa&&myPids().includes(q.projectId)));
+ const roles=[["supervisor","Supervisor de campo"],["lider","Supervisor líder"],["visor","Visor (solo lectura)"]].concat(S.isAdmin?[["padmin","Administrador de proyecto"]]:[]);
+ const projOpts=pa?myProjects():allProjects();
+ const cons=(S.ap.projects||[]).map(pid=>S.projects[pid]).filter(p=>p&&p.aviso).map(p=>{const c=S.consents[id+"|"+p.id];return`<div class="row" style="justify-content:space-between"><span class="small">${esc(p.nombre)}</span><span class="pill ${c&&c.url===p.aviso?"green":"amber"}">${c&&c.url===p.aviso?"Aceptado "+fmtD(c.at):"Pendiente"}</span></div>`}).join("");
  return`<div class="card"><h2>${esc(b.nombre)}</h2><div class="muted small">${esc(b.email||"")}${b.telefono?" · "+esc(b.telefono):""}<br>${esc(b.empresa||"")}${b.puesto?" · "+esc(b.puesto):""}${q.createdAt?`<br>Solicitó el ${fmtDT(q.createdAt)}`:""}</div></div>
- <div class="card"><div class="field"><span class="flabel">Rol</span><div class="chips">${[["supervisor","Supervisor de campo"],["lider","Supervisor líder"],["visor","Visor (solo lectura)"]].map(([v,l])=>`<button class="chip" data-act="aprole" data-v="${v}" aria-pressed="${S.ap.role===v}">${l}</button>`).join("")}</div><div class="help">${{supervisor:"Captura en campo y ve solo sus registros.",lider:"Captura en campo y ve todos los registros y el tablero de sus proyectos. No elimina ni cierra hallazgos de otros.",visor:"Solo consulta el tablero y los registros de sus proyectos."}[S.ap.role]||""}</div></div>
+ ${cons?`<div class="card"><h3>Aviso de privacidad</h3>${cons}</div>`:""}
+ ${!canEd?`<div class="notice warn">${m.role==="padmin"||m.role==="admin"?"Es administrador; solo el administrador general puede modificarlo.":"Este usuario también trabaja en proyectos que no administras. Solo el administrador general puede modificarlo."}</div>`:`<div class="card"><div class="field"><span class="flabel">Rol</span><div class="chips">${roles.map(([v,l])=>`<button class="chip" data-act="aprole" data-v="${v}" aria-pressed="${S.ap.role===v}">${l}</button>`).join("")}</div><div class="help">${{supervisor:"Captura en campo y ve solo sus registros.",lider:"Captura en campo y ve todos los registros y el tablero de sus proyectos. No elimina ni cierra hallazgos de otros.",visor:"Solo consulta el tablero y los registros de sus proyectos.",padmin:"Administra sus proyectos: aprueba y crea usuarios, edita los datos del proyecto, cierra hallazgos, marca accidentes como enterados y elimina registros. No crea ni elimina proyectos."}[S.ap.role]||""}</div></div>
  <div class="field"><span class="flabel">Personal de</span><div class="chips">${Object.entries(ORG).map(([v,l])=>`<button class="chip" data-act="aporg" data-v="${v}" aria-pressed="${S.ap.origen===v}">${l}</button>`).join("")}</div></div>
- <div class="field"><span class="flabel">Proyectos asignados</span>${allProjects().length?`<div class="chips">${allProjects().map(p=>`<button class="chip" data-act="approj" data-v="${esc(p.id)}" aria-pressed="${S.ap.projects.includes(p.id)}">${esc(p.nombre)}</button>`).join("")}</div>`:`<div class="help">Crea un proyecto antes de asignarlo.</div>`}</div>
+ <div class="field"><span class="flabel">Proyectos asignados</span>${projOpts.length?`<div class="chips">${projOpts.map(p=>`<button class="chip" data-act="approj" data-v="${esc(p.id)}" aria-pressed="${S.ap.projects.includes(p.id)}">${esc(p.nombre)}</button>`).join("")}</div>`:`<div class="help">Crea un proyecto antes de asignarlo.</div>`}</div>
  <button class="btn primary" data-act="approve">${isMember?"Guardar cambios":"Aprobar acceso"}</button></div>
- ${isMember?`<button class="btn ghost" data-act="ap-toggle">${m.active?"Suspender acceso":"Reactivar acceso"}</button>`:`<button class="btn ghost" data-act="reject">Rechazar solicitud</button>`}${S.members[id]||S.requests[id]?`<div class="zone"><button class="btn danger" data-act="user-del">Eliminar usuario</button><div class="help">Pierde el acceso de inmediato. Sus registros capturados se conservan.</div></div>`:""}`;
+ ${isMember?`<button class="btn ghost" data-act="ap-toggle">${m.active?"Suspender acceso":"Reactivar acceso"}</button>`:`<button class="btn ghost" data-act="reject">Rechazar solicitud</button>`}${S.members[id]||S.requests[id]?`<div class="zone"><button class="btn danger" data-act="user-del">Eliminar usuario</button><div class="help">Pierde el acceso de inmediato. Sus registros capturados se conservan.</div></div>`:""}`}`;
 }
 async function writeMember(uid,extra){
  const q=S.requests[uid]||{},m=S.members[uid]||{};
- const d={nombre:m.nombre||q.nombre||"",email:m.email||q.email||"",telefono:m.telefono||q.telefono||"",empresa:m.empresa||q.empresa||"",puesto:m.puesto||q.puesto||"",role:m.role||q.rol||"supervisor",origen:m.origen||q.origen||"principal",projects:m.projects||[],active:m.active??true,rejected:false,updatedAt:new Date().toISOString(),...extra};
- try{await S.db.doc("members/"+uid).set(d);return true}catch(e){toast("No se pudo guardar el usuario.");return false}
+ const d={nombre:m.nombre||q.nombre||"",email:m.email||q.email||"",telefono:m.telefono||q.telefono||"",empresa:m.empresa||q.empresa||"",puesto:m.puesto||q.puesto||"",role:m.role||q.rol||"supervisor",origen:m.origen||q.origen||"principal",projects:m.projects&&m.projects.length?m.projects:(q.projectId?[q.projectId]:[]),active:m.active??true,rejected:false,updatedAt:new Date().toISOString(),updatedBy:S.uid,...extra};
+ try{await S.db.doc("members/"+uid).set(d);await touchUids(uid,d.projects);return true}catch(e){toast(isPA()?"No se pudo guardar. Solo puedes asignar tus proyectos.":"No se pudo guardar el usuario.");return false}
 }
-function newProject(){return{id:"p"+rid(8),nombre:"",cliente:"",ubicacion:"",logo:"",areas:[],contratistas:[],hh:0,thr:{alto:3,trir:2},modules:Object.fromEntries(MODS.map(m=>[m.k,true])),customFields:[],notify:{emails:[],phones:[],events:["accidente","alto"]},active:true,_new:1}}
+function newProject(){return{id:"p"+rid(8),nombre:"",cliente:"",ubicacion:"",aviso:"",logo:"",areas:[],contratistas:[],hh:0,thr:{alto:3,trir:2},modules:Object.fromEntries(MODS.map(m=>[m.k,true])),customFields:[],notify:{emails:[],phones:[],events:["accidente","alto"]},active:true,_new:1}}
 function viewProjectEdit(){
  const p=S.editProject,n=p.notify,ev=n.events||[];
  return`<form class="form" id="projForm" novalidate>
@@ -2565,6 +2649,7 @@ function viewProjectEdit(){
   <div class="field"><label for="pj-n">Nombre del proyecto <span class="req">*</span></label><input class="inp" id="pj-n" data-pf="nombre" value="${esc(p.nombre)}"></div>
   <div class="field"><label for="pj-c">Cliente</label><input class="inp" id="pj-c" data-pf="cliente" value="${esc(p.cliente)}"></div>
   <div class="field"><label for="pj-u">Ubicación</label><input class="inp" id="pj-u" data-pf="ubicacion" value="${esc(p.ubicacion||"")}"></div>
+  <div class="field"><label for="pj-av">Enlace del aviso de privacidad</label><input class="inp" id="pj-av" data-pf="aviso" type="url" inputmode="url" placeholder="https://…" value="${esc(p.aviso||"")}"><div class="help">Pega el enlace del documento (Drive, SharePoint o sitio web) con permiso de lectura para cualquiera con el enlace. Quien se registre en este proyecto debe aceptarlo, y los usuarios actuales lo aceptan al entrar. Si cambias el enlace, todos lo vuelven a aceptar.</div>${p.aviso?`<div>${avisoLink(p,"Probar enlace")}</div>`:""}</div>
   <div class="field"><span class="flabel">Logo</span><div class="row"><div class="logo" style="width:64px;height:64px">${p.logo?`<img src="${esc(p.logo)}" alt="Logo">`:"—"}</div><label class="btn sm" for="pj-logo">Elegir logo</label><input type="file" id="pj-logo" accept="image/*" hidden data-logo="1">${p.logo?`<button type="button" class="btn sm ghost" data-act="logo-del">Quitar</button>`:""}</div><div class="help">Aparece en la app y en los reportes.</div></div>
   <div class="field"><label for="pj-a">Áreas del centro de trabajo</label><textarea class="inp" id="pj-a" data-pf="areas" data-split="1" placeholder="Una por línea">${esc((p.areas||[]).join("\n"))}</textarea><div class="help">Sirven para elegir el área y medir la cobertura de los recorridos.</div></div>
   <div class="field"><label for="pj-k">Contratistas</label><textarea class="inp" id="pj-k" data-pf="contratistas" data-split="1" placeholder="Uno por línea">${esc((p.contratistas||[]).join("\n"))}</textarea></div></div>
@@ -2584,8 +2669,8 @@ function viewProjectEdit(){
   <div class="field"><label for="pj-h">Horas-hombre del periodo</label><input class="inp" id="pj-h" type="number" min="0" data-pf="hh" value="${esc(p.hh||"")}"><div class="help">Base para TRIR, LTIFR y DART.</div></div>
   <div class="field"><label for="pj-ta">Máximo de hallazgos de riesgo alto abiertos</label><input class="inp" id="pj-ta" type="number" min="0" data-thr="alto" value="${esc(p.thr.alto)}"></div>
   <div class="field"><label for="pj-tt">TRIR máximo</label><input class="inp" id="pj-tt" type="number" min="0" step="0.1" data-thr="trir" value="${esc(p.thr.trir)}"></div></div>
- ${p._new?"":`<label class="row" style="flex-wrap:nowrap;cursor:pointer"><input type="checkbox" id="pj-act" ${p.active!==false?"checked":""} style="width:20px;height:20px;accent-color:var(--accent)"><span>Proyecto activo (desactívalo para archivarlo)</span></label>`}
- <button type="submit" class="btn primary">Guardar proyecto</button>${p._new?"":`<div class="zone"><button type="button" class="btn danger" data-act="proj-del">Eliminar proyecto</button><div class="help">Borra el proyecto y todos sus registros. No se puede deshacer.</div></div>`}</form>`;
+ ${p._new||!S.isAdmin?"":`<label class="row" style="flex-wrap:nowrap;cursor:pointer"><input type="checkbox" id="pj-act" ${p.active!==false?"checked":""} style="width:20px;height:20px;accent-color:var(--accent)"><span>Proyecto activo (desactívalo para archivarlo)</span></label>`}
+ <button type="submit" class="btn primary">Guardar proyecto</button>${p._new||!S.isAdmin?"":`<div class="zone"><button type="button" class="btn danger" data-act="proj-del">Eliminar proyecto</button><div class="help">Borra el proyecto y todos sus registros. No se puede deshacer.</div></div>`}</form>`;
 }
 function syncProject(){
  const p=S.editProject;if(!p)return;
@@ -2600,12 +2685,13 @@ function syncProject(){
 async function saveProject(e){
  e.preventDefault();syncProject();const p=S.editProject;
  if(!p.nombre){toast("Escribe el nombre del proyecto.");$("#pj-n").focus();return}
+ if(p.aviso&&!/^https:\/\/\S+$/i.test(p.aviso)){toast("El enlace del aviso debe empezar con https://");$("#pj-av").focus();return}
  const d={...p};delete d._new;delete d.id;d.updatedAt=new Date().toISOString();
- try{await S.db.doc("projects/"+p.id).set(d);toast("Proyecto guardado");back()}catch(err){toast(err&&err.code==="invalid_argument"?"Solo el administrador puede guardar proyectos, o el logo es demasiado grande.":"No se pudo guardar el proyecto.")}
+ try{await S.db.doc("projects/"+p.id).set(d);S.db.doc("pub/"+p.id).set({nombre:d.nombre,aviso:d.aviso||"",active:d.active!==false}).catch(e=>console.warn(e));toast(d.aviso&&d.aviso!==(S.projects[p.id]||{}).aviso?"Proyecto guardado. Los usuarios aceptarán el aviso al entrar.":"Proyecto guardado");back()}catch(err){toast(err&&err.code==="invalid_argument"?"Solo el administrador puede guardar proyectos, o el logo es demasiado grande.":"No se pudo guardar el proyecto.")}
 }
 
 function openNewUser(){
- const ps=allProjects(),pass=rid(4).toLowerCase()+"-"+rid(4).toLowerCase();
+ const ps=isPA()?myProjects():allProjects(),pass=rid(4).toLowerCase()+"-"+rid(4).toLowerCase();
  openModal(`<div class="sheet-head"><h2>Crear usuario</h2><button class="btn sm ghost" data-act="close">Cerrar</button></div>
  <div class="notice">Ideal para el cliente o el responsable de cada proyecto: entra con correo y contraseña y solo ve el tablero y los registros de su proyecto.</div>
  <form class="form" id="userForm" novalidate>
@@ -2613,7 +2699,7 @@ function openNewUser(){
  <div class="field"><label for="nu-e">Correo <span class="req">*</span></label><input class="inp" id="nu-e" type="email" autocomplete="off"></div>
  <div class="field"><label for="nu-p">Contraseña inicial <span class="req">*</span></label><input class="inp mono" id="nu-p" value="${pass}" autocomplete="off"><div class="help">Mínimo 6 caracteres. La persona puede cambiarla con "Olvidé mi contraseña".</div></div>
  <div class="field"><label for="nu-em">Empresa</label><input class="inp" id="nu-em"></div>
- <div class="field"><label for="nu-r">Tipo de usuario</label><select class="inp" id="nu-r"><option value="visor">Visor del proyecto (tablero y registros)</option><option value="supervisor">Supervisor (captura en campo)</option><option value="lider">Supervisor líder (captura y ve todo el proyecto)</option></select></div>
+ <div class="field"><label for="nu-r">Tipo de usuario</label><select class="inp" id="nu-r"><option value="visor">Visor del proyecto (tablero y registros)</option><option value="supervisor">Supervisor (captura en campo)</option><option value="lider">Supervisor líder (captura y ve todo el proyecto)</option>${S.isAdmin?`<option value="padmin">Administrador de proyecto (gestiona usuarios y registros de su proyecto)</option>`:""}</select></div>
  <div class="field"><label for="nu-o">Personal de</label><select class="inp" id="nu-o"><option value="principal">Empresa principal</option><option value="contratista">Contratista</option></select></div>
  <div class="field"><span class="flabel">Proyecto(s) <span class="req">*</span></span>${ps.length?`<div class="chips">${ps.map(p=>`<button type="button" class="chip" data-act="nu-proj" data-v="${esc(p.id)}" aria-pressed="${ps.length===1}">${esc(p.nombre)}</button>`).join("")}</div>`:`<div class="help">Primero crea un proyecto.</div>`}</div>
  <button class="btn primary" type="submit" id="nu-btn">Crear usuario</button></form>`);
@@ -2625,7 +2711,7 @@ async function submitNewUser(){
  if(!d.projects.length){toast("Elige al menos un proyecto.");return}
  if(d.origen==="contratista"&&!d.empresa){toast("Escribe el nombre de la empresa contratista.");return}
  const btn=$("#nu-btn");btn.disabled=true;btn.textContent="Creando…";
- try{await cloud.createUser(d)}catch(e){btn.disabled=false;btn.textContent="Crear usuario";toast(e&&e.message||"No se pudo crear el usuario.");return}
+ try{const uid=await cloud.createUser(d);await touchUids(uid,d.projects)}catch(e){btn.disabled=false;btn.textContent="Crear usuario";toast(e&&e.message||"No se pudo crear el usuario.");return}
  const txt=`Acceso a Supervisión EHS\nEnlace: ${location.href.split("#")[0]}\nCorreo: ${d.email}\nContraseña: ${d.password}\nProyecto: ${d.projects.map(projName).join(", ")}`;
  openModal(`<div class="sheet-head"><h2>Usuario creado</h2><button class="btn sm ghost" data-act="close">Listo</button></div>
  <div class="notice ok">${esc(d.nombre)} ya puede iniciar sesión.</div>
@@ -2636,23 +2722,24 @@ async function submitNewUser(){
 /* ===================== Más y portafolio ===================== */
 function viewMas(){
  const m=member(),r=role();
- return`<div class="card"><h2>${esc(authorName())}</h2>${m&&m.email?`<div class="muted small">${esc(m.email)}${m.empresa?" · "+esc(m.empresa):""}</div>`:""}<div class="row"><span class="pill accent">${{admin:"Administrador",supervisor:"Supervisor",visor:"Visor"}[r]}</span><span class="muted small">${esc(window.cloud?cloud.email()||"":"")}</span></div><div><button class="btn sm" data-act="logout">Cerrar sesión</button></div>
+ return`<div class="card"><h2>${esc(authorName())}</h2>${m&&m.email?`<div class="muted small">${esc(m.email)}${m.empresa?" · "+esc(m.empresa):""}</div>`:""}<div class="row"><span class="pill accent">${ROLE_L[r]||"Supervisor"}</span><span class="muted small">${esc(window.cloud?cloud.email()||"":"")}</span></div><div><button class="btn sm" data-act="logout">Cerrar sesión</button></div>
  ${S.isAdmin?`<div class="field"><label for="adm-name">Tu nombre en los registros</label><div class="row" style="flex-wrap:nowrap"><input class="inp" id="adm-name" value="${esc((m&&m.nombre)||S.meName)}"><button class="btn sm" data-act="adm-name">Guardar</button></div></div>`:""}</div>
  <div class="card"><h3>Envío de registros</h3><div class="muted small">${S.online?"Con conexión.":"Sin conexión."} ${S.outbox.length?`${S.outbox.length} registro(s) guardados en este teléfono por enviar.`:"Todo está enviado."}</div>
  ${S.outbox.map(o=>`<div class="row" style="border-top:1px solid var(--line);padding-top:8px;flex-wrap:nowrap"><span class="small" style="flex:1"><b>${esc(o.doc.folio)}</b> · ${esc(MOD[o.doc.type].name)}${o.err?` · <span style="color:var(--red)">${esc(o.err)}</span>`:""}</span><button class="btn sm ghost" data-act="discard" data-v="${esc(o.id)}">Descartar</button></div>`).join("")}
  ${S.outbox.length?`<div><button class="btn sm" data-act="sync" ${S.online?"":"disabled"}>Enviar ahora</button></div>`:""}</div>
+ ${(()=>{const ps=myProjects().filter(p=>p.aviso);return ps.length?`<div class="card"><h3>Avisos de privacidad</h3>${ps.map(p=>{const c=S.myCons[p.id];return`<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:8px"><span class="small"><b>${esc(p.nombre)}</b><br><span class="muted">${S.isAdmin?"Lo aceptan los usuarios del proyecto.":c&&c.url===p.aviso?"Aceptado el "+fmtDT(c.at):"Pendiente"}</span></span>${avisoLink(p,"Ver")}</div>`}).join("")}</div>`:""})()}
  ${r!=="visor"?`<div class="card"><h3>Portafolio de evidencias EC0680</h3><div class="muted small">Tus formatos agrupados por elemento del estándar.</div><div><button class="btn sm primary" data-act="port">Abrir portafolio</button></div></div>`:""}
  ${installCard()}
- <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.5<br>Elaborado por José Alfredo González García</div>`;
+ <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.6<br>Elaborado por José Alfredo González García</div>`;
 }
 function viewPortfolio(){
  if(wantsHistory())ensureHistory();
- const who=S.isAdmin?S.port.who:S.uid,a=new Date(S.port.from+"T00:00"),b=new Date(S.port.to+"T23:59:59");
+ const who=(S.isAdmin||isPA())?S.port.who:S.uid,a=new Date(S.port.from+"T00:00"),b=new Date(S.port.to+"T23:59:59");
  const authors={};visible().forEach(r=>authors[r.authorId]=r.authorName);
  const rs=visible().filter(r=>!r.pending&&(!who||r.authorId===who)&&new Date(r.createdAt)>=a&&new Date(r.createdAt)<=b),cnt=k=>rs.filter(r=>r.type===k).length;
  const prods=[["apr","Análisis de riesgo previo (E2147)"],["observaciones","Reporte de observaciones (E2148)"],["reporte","Reporte diario de jornada (E2149)"],["platica","Minuta de reunión firmada (E2149)"]];
  return`<div class="muted small">Agrupa los formatos por elemento del estándar EC0680. Los desempeños los observa el evaluador en campo.</div>
- <div class="card">${S.isAdmin?`<div class="field"><label for="pt-w">Supervisor</label><select class="inp" id="pt-w" data-chg="pwho"><option value="">Todos</option>${Object.entries(authors).map(([id,n])=>`<option value="${esc(id)}" ${who===id?"selected":""}>${esc(n)}</option>`).join("")}</select></div>`:""}
+ <div class="card">${(S.isAdmin||isPA())?`<div class="field"><label for="pt-w">Supervisor</label><select class="inp" id="pt-w" data-chg="pwho"><option value="">Todos</option>${Object.entries(authors).map(([id,n])=>`<option value="${esc(id)}" ${who===id?"selected":""}>${esc(n)}</option>`).join("")}</select></div>`:""}
  <div class="row" style="flex-wrap:nowrap"><div class="field" style="flex:1"><label for="pt-f">Desde</label><input class="inp" type="date" id="pt-f" data-chg="pfrom" value="${S.port.from}"></div><div class="field" style="flex:1"><label for="pt-t">Hasta</label><input class="inp" type="date" id="pt-t" data-chg="pto" value="${S.port.to}"></div></div></div>
  <section class="section"><h3>Productos del estándar</h3><div class="list">${prods.map(([k,l])=>`<div class="item" style="cursor:default"><span class="code c-${MOD[k].code}">${MOD[k].code}</span><span class="item-main"><span style="font-weight:700">${l}</span><span class="item-m">${cnt(k)} en el periodo</span></span><span class="pill ${cnt(k)?"green":"amber"}">${cnt(k)?"Con evidencia":"Pendiente"}</span></div>`).join("")}</div></section>
  ${EC_GROUPS.map(g=>`<div class="card"><div class="ey">${g.code}</div><b>${esc(g.name)}</b>${g.mods.map(k=>`<div class="row" style="justify-content:space-between"><span>${MOD[k].code} · ${esc(MOD[k].name)}</span><span class="mono">${cnt(k)}</span></div>`).join("")}</div>`).join("")}
@@ -2660,7 +2747,7 @@ function viewPortfolio(){
 }
 async function dlPortfolio(){
  if(wantsHistory()&&S.histState!=="done"){await ensureHistory()}
- const who=S.isAdmin?S.port.who:S.uid,a=new Date(S.port.from+"T00:00"),b=new Date(S.port.to+"T23:59:59");
+ const who=(S.isAdmin||isPA())?S.port.who:S.uid,a=new Date(S.port.from+"T00:00"),b=new Date(S.port.to+"T23:59:59");
  const rs=visible().filter(r=>!r.pending&&(!who||r.authorId===who)&&new Date(r.createdAt)>=a&&new Date(r.createdAt)<=b).slice().reverse();
  const need=rs.filter(needsMedia).length;if(need){toast(`Preparando ${need} registro${need>1?"s":""} con fotos…`);await loadMedia(rs.map(r=>r.id))}
  const name=who?((rs[0]&&rs[0].authorName)||authorName()):"Todos los supervisores";
@@ -2715,8 +2802,9 @@ document.addEventListener("click",async e=>{
   case"reject":if(await writeMember(S.reqId,{active:false,rejected:true})){S.ap=null;back();toast("Solicitud rechazada")}break;
   case"ap-toggle":{const m=S.members[S.reqId];if(await writeMember(S.reqId,{active:!m.active})){S.ap=null;back();toast(m.active?"Usuario suspendido":"Usuario reactivado")}break}
   case"proj-edit":{const p=v?S.projects[v]:null;const base=newProject();S.editProject=p?JSON.parse(JSON.stringify({...base,...p,_new:0,thr:{...base.thr,...(p.thr||{})},modules:{...base.modules,...(p.modules||{})},notify:{...base.notify,...(p.notify||{})}})):base;if(p)delete S.editProject._new;push("proyecto");break}
-  case"proj-del":{const p=S.editProject;if(!p||!S.projects[p.id])return;const recs=allRecords().filter(r=>r.projectId===p.id&&!r.pending);if(!confirm(`¿Eliminar el proyecto "${p.nombre}"${recs.length?` y sus ${recs.length} registros`:""}? Esta acción no se puede deshacer.`))return;b.disabled=true;try{const all=await S.db.collection("records").where("projectId","==",p.id).get().then(x=>x.docs.map(d=>d.id)).catch(()=>recs.map(r=>r.id));for(const rid of new Set(all.concat(recs.map(r=>r.id)))){await S.db.doc("records/"+rid).delete();S.db.doc("media/"+rid).delete().catch(()=>{})}for(const m of Object.values(S.members).filter(m=>(m.projects||[]).includes(p.id))){await S.db.doc("members/"+m.id).update({projects:m.projects.filter(x=>x!==p.id)})}await S.db.doc("projects/"+p.id).delete();S.editProject=null;back();toast("Proyecto eliminado")}catch(err){b.disabled=false;toast("No se pudo eliminar el proyecto.")}break}
-  case"user-del":{const id=S.reqId,u=S.members[id]||S.requests[id]||{};if(!confirm(`¿Eliminar a ${u.nombre||"este usuario"}? Perderá el acceso a la app. Sus registros se conservan.`))return;b.disabled=true;try{if(S.members[id])await S.db.doc("members/"+id).delete();if(S.requests[id])await S.db.doc("requests/"+id).delete();S.ap=null;back();toast("Usuario eliminado")}catch(err){b.disabled=false;toast("No se pudo eliminar el usuario.")}break}
+  case"proj-del":{const p=S.editProject;if(!p||!S.projects[p.id])return;const recs=allRecords().filter(r=>r.projectId===p.id&&!r.pending);if(!confirm(`¿Eliminar el proyecto "${p.nombre}"${recs.length?` y sus ${recs.length} registros`:""}? Esta acción no se puede deshacer.`))return;b.disabled=true;try{const all=await S.db.collection("records").where("projectId","==",p.id).get().then(x=>x.docs.map(d=>d.id)).catch(()=>recs.map(r=>r.id));for(const rid of new Set(all.concat(recs.map(r=>r.id)))){await S.db.doc("records/"+rid).delete();S.db.doc("media/"+rid).delete().catch(()=>{})}for(const m of Object.values(S.members).filter(m=>(m.projects||[]).includes(p.id))){await S.db.doc("members/"+m.id).update({projects:m.projects.filter(x=>x!==p.id)})}await S.db.doc("projects/"+p.id).delete();S.db.doc("pub/"+p.id).delete().catch(()=>{});S.editProject=null;back();toast("Proyecto eliminado")}catch(err){b.disabled=false;toast("No se pudo eliminar el proyecto.")}break}
+  case"av-accept":{if(!$("#av-ok")||!$("#av-ok").checked){toast("Marca la casilla para aceptar el aviso.");return}acceptAviso(v,"app");break}
+  case"user-del":{const id=S.reqId,u=S.members[id]||S.requests[id]||{};if(!confirm(`¿Eliminar a ${u.nombre||"este usuario"}? Perderá el acceso a la app. Sus registros se conservan.`))return;b.disabled=true;try{if(S.members[id])await S.db.doc("members/"+id).delete();if(S.requests[id])await S.db.doc("requests/"+id).delete();await touchUids(id,[]);S.ap=null;back();toast("Usuario eliminado")}catch(err){b.disabled=false;toast("No se pudo eliminar el usuario.")}break}
   case"logo-del":syncProject();S.editProject.logo="";render();break;
   case"cf-add":{syncProject();const label=$("#cf-label").value.trim();if(!label){toast("Escribe el nombre del campo.");return}const t=$("#cf-t").value;const c={id:rid(5),mod:$("#cf-mod").value,label,t};if(t==="select"){c.opts=$("#cf-opts").value.split(",").map(s=>s.trim()).filter(Boolean);if(!c.opts.length){toast("Escribe las opciones.");return}}(S.editProject.customFields=S.editProject.customFields||[]).push(c);render();toast("Campo agregado. Guarda el proyecto para aplicarlo.");break}
   case"cf-del":syncProject();S.editProject.customFields.splice(+b.dataset.i,1);render();break;
@@ -2740,7 +2828,7 @@ document.addEventListener("change",async e=>{
  if(t.dataset.logo){const f=t.files&&t.files[0];if(!f)return;syncProject();try{S.editProject.logo=await compress(f,240,1,"image/png");render()}catch(err){toast("No se pudo leer el logo.")}return}
  const c=t.dataset.chg;if(!c)return;
  if(c==="proj"){S.projectId=t.value;lsSet("ehs.project",t.value)}else if(c==="period")S.f.period=t.value;else if(c==="fproj")S.f.proj=t.value;else if(c==="ftype")S.f.type=t.value;else if(c==="forg")S.f.org=t.value;
- else if(c==="pwho")S.port.who=t.value;else if(c==="pfrom")S.port.from=t.value||S.port.from;else if(c==="pto")S.port.to=t.value||S.port.to;
+ else if(c==="rgproj")S.rgProj=t.value;else if(c==="pwho")S.port.who=t.value;else if(c==="pfrom")S.port.from=t.value||S.port.from;else if(c==="pto")S.port.to=t.value||S.port.to;
  render();
 });
 document.addEventListener("submit",e=>{if(e.target.id==="userForm"){e.preventDefault();submitNewUser();return}if(e.target.id==="recForm")saveForm(e);else if(e.target.id==="regForm")submitRegister(e);else if(e.target.id==="projForm")saveProject(e);else e.preventDefault()});
