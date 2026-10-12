@@ -91,6 +91,10 @@ h2{font-size:19px;font-weight:700} h3{font-size:16px;font-weight:700}
 .list{display:flex;flex-direction:column;gap:8px}
 .item{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;text-align:left;width:100%}
 .item-main{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
+.item.sel{border-color:var(--accent);background:var(--accent-soft)}
+.ck{width:22px;height:22px;border:2px solid var(--line);border-radius:6px;flex:none;display:grid;place-items:center;background:var(--surface);color:#fff;font-weight:900;font-size:14px;align-self:center}
+.item.sel .ck{background:var(--accent);border-color:var(--accent)}
+.selbar{position:sticky;top:-16px;z-index:5;background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 16px -10px rgba(0,0,0,.35)}
 .item-t{font-weight:700;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .item-m{font-size:12px;color:var(--ink-2)}
 .pills{display:flex;gap:6px;flex-wrap:wrap}
@@ -2237,7 +2241,7 @@ const ICONS={
 const svg=n=>`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
 const SUBS=["form","proyecto","portafolio","usuario","registro"];
 const TITLES={dashboard:"Tablero",campo:"Campo",registros:"Registros",admin:"Administrar",mas:"Más",proyecto:"Proyecto",portafolio:"Portafolio EC0680",usuario:"Usuario",registro:"Solicitar acceso"};
-function go(tab){S.stack=[];S.tab=tab;S.form=null;S.editProject=null;render(true)}
+function go(tab){S.stack=[];S.tab=tab;S.sel=null;S.form=null;S.editProject=null;render(true)}
 function push(tab){S.stack.push(S.tab);S.tab=tab;render(true)}
 function back(){S.form=null;S.editProject=null;S.tab=S.stack.pop()||(role()?TABS[role()][0][0]:null);render(true)}
 
@@ -2324,7 +2328,8 @@ function itemHTML(r){
  const risk=r.type==="hallazgo"?`<span class="pill ${{Alto:"red",Medio:"amber",Bajo:"green"}[v.riesgo]||""}">Riesgo ${esc(v.riesgo||"")}</span>`:r.type==="accidente"?`<span class="pill ${/Casi/.test(v.tipo||"")?"amber":"red"}">${esc((v.tipo||"").replace(/ \(.*\)/,""))}</span>`:r.type==="permiso"&&v.estado?`<span class="pill blue">${esc(v.estado)}</span>`:"";
  const ct=(recOrg(r)==="contratista"?`<span class="pill">Contratista</span>`:"")+(photoCountOf(r)?`<span class="pill">📷 ${photoCountOf(r)}</span>`:"");
  const st=r.pending?`<span class="pill amber">Por enviar</span>`:r.type==="hallazgo"?(r.status==="cerrado"?`<span class="pill green">Cerrado</span>`:`<span class="pill amber">Abierto</span>`):r.type==="accidente"&&!r.ack?`<span class="pill red">Sin enterar</span>`:"";
- return`<button class="item" data-act="open" data-v="${esc(r.id)}"><span class="code c-${m.code}">${m.code}</span><span class="item-main"><span class="item-t">${esc(recTitle(r))}</span><span class="item-m">${esc(r.folio)} · ${fmtDT(r.createdAt)} · ${esc(r.authorName||"")}${recOrg(r)==="contratista"?" ("+esc(recEmp(r)||"contratista")+")":""}${v.area?" · "+esc(v.area):""}${myProjects().length>1?" · "+esc(projName(r.projectId)):""}</span>${risk||st||ct||r.ejemplo?`<span class="pills">${risk}${st}${ct}${r.ejemplo?`<span class="ex">EJEMPLO</span>`:""}</span>`:""}</span></button>`;
+ const sel=S.sel&&!r.pending,on=sel&&S.sel.has(r.id);
+ return`<button class="item${on?" sel":""}" data-act="${sel?"selrec":"open"}" data-v="${esc(r.id)}" ${sel?`aria-pressed="${on}"`:""}>${sel?`<span class="ck" aria-hidden="true">${on?"✓":""}</span>`:""}<span class="code c-${m.code}">${m.code}</span><span class="item-main"><span class="item-t">${esc(recTitle(r))}</span><span class="item-m">${esc(r.folio)} · ${fmtDT(r.createdAt)} · ${esc(r.authorName||"")}${recOrg(r)==="contratista"?" ("+esc(recEmp(r)||"contratista")+")":""}${v.area?" · "+esc(v.area):""}${myProjects().length>1?" · "+esc(projName(r.projectId)):""}</span>${risk||st||ct||r.ejemplo?`<span class="pills">${risk}${st}${ct}${r.ejemplo?`<span class="ex">EJEMPLO</span>`:""}</span>`:""}</span></button>`;
 }
 function syncBanner(){if(!S.outbox.length&&S.online)return"";return`<button class="sync" data-act="sync">${!S.online?`Sin conexión. ${S.outbox.length?`${S.outbox.length} registro${S.outbox.length>1?"s":""} se enviará${S.outbox.length>1?"n":""} al recuperar señal. No cierres la app.`:"Puedes seguir llenando formatos; se guardan en este teléfono."}`:`${S.outbox.length} registro${S.outbox.length>1?"s":""} por enviar. Toca para enviar ahora.`}</button>`}
 function viewCampo(){
@@ -2473,9 +2478,25 @@ function viewRecords(){
   <select class="inp" data-chg="period" aria-label="Periodo">${PERIODS.map(([v,l])=>`<option value="${v}" ${f.period===v?"selected":""}>${l}</option>`).join("")}</select></div>
  ${role()!=="supervisor"?`<select class="inp" data-chg="forg" aria-label="Personal"><option value="all">Todo el personal</option>${Object.entries(ORG).map(([k,l])=>`<option value="${k}" ${f.org===k?"selected":""}>${l}</option>`).join("")}</select>`:""}
  ${f.status!=="all"?`<div class="row"><span class="pill accent">${esc({abierto:"Hallazgos abiertos",alto:"Abiertos riesgo alto",cerrado:"Cerrados",lesion:"Accidentes con lesión",casi:"Casi accidentes"}[f.status])}</span><button class="btn sm ghost" data-act="clearf">Quitar filtros</button></div>`:""}
- <div class="row"><span class="muted small">${rs.length} registro${rs.length===1?"":"s"}${S.histState==="loading"?" · cargando anteriores…":""}</span><span class="spacer"></span>${role()!=="supervisor"&&S.dl?`<button class="btn sm" data-act="csv">Exportar a Excel (CSV)</button>`:""}</div>
+ <div class="row"><span class="muted small">${rs.length} registro${rs.length===1?"":"s"}${S.histState==="loading"?" · cargando anteriores…":""}</span><span class="spacer"></span>${S.isAdmin&&!S.sel&&rs.length?`<button class="btn sm" data-act="sel-on">Seleccionar</button>`:""}${role()!=="supervisor"&&S.dl?`<button class="btn sm" data-act="csv">Exportar a Excel (CSV)</button>`:""}</div>
+ ${S.sel?selBar(rs):""}
  <div class="list" id="recList">${rs.length?rs.slice(0,250).map(itemHTML).join(""):`<div class="empty">No hay registros con estos filtros.</div>`}</div>`;
 }
+// Eliminación de varios registros (solo administrador general)
+function delProgHTML(){const d=S.delProg;return`<b>Eliminando… ${d.k} de ${d.n}</b><div style="height:6px;background:var(--sunk);border-radius:3px"><div style="height:6px;border-radius:3px;background:var(--red);width:${Math.round(d.k/d.n*100)}%"></div></div>`}
+function selBar(rs){if(S.delProg)return`<div class="selbar" id="selBar">${delProgHTML()}</div>`;const ok=rs.filter(r=>!r.pending),n=S.sel.size;
+ return`<div class="selbar" id="selBar"><div class="row" style="flex-wrap:nowrap"><b style="flex:1">${n} seleccionado${n===1?"":"s"}</b><button class="btn sm ghost" data-act="sel-off">Cancelar</button></div>
+ <div class="row"><button class="btn sm" data-act="sel-all">Todos los filtrados (${ok.length})</button>${n?`<button class="btn sm" data-act="sel-none">Ninguno</button>`:""}<span class="spacer"></span><button class="btn sm danger" data-act="sel-del" ${n?"":"disabled"}>Eliminar ${n||""}</button></div>
+ ${ok.length>250?`<div class="help">La lista muestra los primeros 250; "Todos los filtrados" incluye los ${ok.length}. Usa los filtros de formato, periodo o búsqueda para acotar.</div>`:""}</div>`}
+async function delMany(ids){
+ const all=ids.map(findRec).filter(r=>r&&!r.pending),n=all.length;if(!n)return;
+ const byType={};all.forEach(r=>{const k=(MOD[r.type]||{}).name||r.type;byType[k]=(byType[k]||0)+1});
+ const fotos=all.reduce((s,r)=>s+(photoCountOf(r)||0),0);
+ if(!confirm(`¿Eliminar ${n} registro${n>1?"s":""}${fotos?` con ${fotos} foto${fotos>1?"s":""}`:""}?\n\n${Object.entries(byType).map(([k,c])=>`• ${k}: ${c}`).join("\n")}\n\nNo se puede deshacer. Si los necesitas, descarga antes el CSV o los reportes.`))return;
+ let done=0,fail=0,i=0;S.delProg={k:0,n};const bar=()=>{S.delProg.k=done+fail;const b=$("#selBar");if(b)b.innerHTML=delProgHTML()};bar();
+ const work=async()=>{while(i<n){const r=all[i++];try{await S.db.doc("records/"+r.id).delete();if(r.mediaN)await S.db.doc("media/"+r.id).delete().catch(()=>{});if(S.history)delete S.history[r.id];delete S.media[r.id];done++}catch(e){fail++}bar()}};
+ await Promise.all(Array.from({length:Math.min(4,n)},work));
+ S.sel=null;S.delProg=null;render();toast(fail?`Se eliminaron ${done}. ${fail} no se pudieron eliminar; revisa tu conexión e inténtalo de nuevo.`:`${done} registro${done>1?"s":""} eliminado${done>1?"s":""}`)}
 function valueHTML(f,v){
  if(v==null||v==="")return"—";
  switch(f.t){
@@ -2788,6 +2809,12 @@ document.addEventListener("click",async e=>{
   case"close-h":{const note=$("#cl-note").value.trim();if(!note){toast("Describe la acción implementada.");return}try{await S.db.doc("records/"+v).update({status:"cerrado",closedAt:new Date().toISOString(),closedBy:authorName(),closeNote:note});closeModal();toast("Hallazgo cerrado")}catch(err){toast("No se pudo cerrar. Revisa tu conexión.")}break}
   case"ack":try{await S.db.doc("records/"+v).update({ack:{by:authorName(),at:new Date().toISOString()}});closeModal();toast("Marcado como enterado")}catch(err){toast("No se pudo actualizar.")}break;
   case"del-rec":$("#delConfirm").hidden=false;break;
+  case"sel-on":if(S.isAdmin){S.sel=new Set();render()}break;
+  case"sel-off":if(!S.delProg){S.sel=null;render()}break;
+  case"selrec":{if(!S.sel)return;S.sel.has(v)?S.sel.delete(v):S.sel.add(v);render();break}
+  case"sel-all":if(S.sel){filtered().filter(r=>!r.pending).forEach(r=>S.sel.add(r.id));render()}break;
+  case"sel-none":if(S.sel){S.sel.clear();render()}break;
+  case"sel-del":if(S.isAdmin&&S.sel&&S.sel.size&&!S.delProg){b.disabled=true;delMany([...S.sel])}break;
   case"del-no":$("#delConfirm").hidden=true;break;
   case"del-yes":try{await S.db.doc("records/"+v).delete();S.db.doc("media/"+v).delete().catch(()=>{});if(S.history)delete S.history[v];closeModal();toast("Registro eliminado")}catch(err){toast("No se pudo eliminar.")}break;
   case"csv":csvExport();break;
