@@ -93,6 +93,8 @@ h2{font-size:19px;font-weight:700} h3{font-size:16px;font-weight:700}
 .item-main{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
 .item.sel{border-color:var(--accent);background:var(--accent-soft)}
 .vit{display:grid;grid-template-columns:1fr 1fr;gap:8px}.vbox{display:flex;flex-direction:column;gap:3px;font-size:12.5px;font-weight:600;color:var(--ink-2)}.vbox .u{font-size:11.5px;color:var(--ink-2);min-width:38px}
+.cam{background:#000;border-radius:10px;overflow:hidden;aspect-ratio:3/4;max-height:60vh;display:grid;place-items:center}.cam video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.selfie{display:flex;flex-direction:column;gap:6px}.selfie img{width:220px;border-radius:8px;border:1px solid var(--line)}
 .consent{font-size:13px;line-height:1.5;background:var(--sunk);border-radius:8px;padding:10px 12px}
 .sos.amb{background:#8A5A12}.perf{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);margin-top:4px}
 .ck{width:22px;height:22px;border:2px solid var(--line);border-radius:6px;flex:none;display:grid;place-items:center;background:var(--surface);color:#fff;font-weight:900;font-size:14px;align-self:center}
@@ -2000,7 +2002,7 @@ const NOMS=["NOM-001-STPS","NOM-002-STPS","NOM-004-STPS","NOM-005-STPS","NOM-006
 const ACC_TIPOS=["Lesión con tiempo perdido","Lesión sin tiempo perdido (atención médica)","Primeros auxilios","Casi accidente","Daño material","Ambiental (derrame / fuga)"];
 const MODS=[
  {k:"jornada",code:"INI",name:"Inicio de jornada",ec:"EC0680 · E2147",desc:"EPP, comunicación, extintores, herramientas y competencias antes de iniciar.",titleK:["area"],fields:[
-  {k:"fecha",t:"datetime",label:"Fecha y hora",req:1},{k:"area",t:"area",label:"Área de trabajo",req:1},{k:"cuadrilla",t:"number",label:"Integrantes de la cuadrilla"},
+  {k:"fecha",t:"datetime",label:"Fecha y hora",req:1},{k:"selfie",t:"selfie",label:"Selfie con ubicación",req:1,help:"Se toma en este momento con la cámara frontal. La foto lleva estampados tu nombre, la fecha, la hora y las coordenadas."},{k:"area",t:"area",label:"Área de trabajo",req:1},{k:"cuadrilla",t:"number",label:"Integrantes de la cuadrilla"},
   {k:"epp",t:"check",label:"Equipo de protección personal",items:CHK_EPP,req:1},{k:"cond",t:"check",label:"Condiciones antes de iniciar",items:CHK_INI,req:1},
   {k:"operadores",t:"rows",label:"Operadores de equipo móvil o maquinaria",help:"Competencia con DC-3 o licencia vigente.",cols:[{k:"nombre",label:"Nombre"},{k:"equipo",label:"Equipo"},{k:"doc",label:"DC-3 / licencia"},{k:"vig",label:"Vigencia"}]},
   {k:"anomalias",t:"textarea",label:"Anomalías o desviaciones detectadas"},{k:"fotos",t:"photos",label:"Evidencia fotográfica"},{k:"firma",t:"sign",label:"Firma del supervisor",req:1}]},
@@ -2465,7 +2467,7 @@ function installCard(){return`<div class="card"><h3>Úsala como app en tu celula
 function itemHTML(r){
  const m=MOD[r.type]||{code:"?",name:r.type},v=r.values||{};
  const risk=r.type==="aptitud"?`<span class="pill ${{Apto:"green","No apto":"red"}[v.resultado]||"amber"}">${esc(v.resultado||"")}${v.trabajo?" · "+esc(v.trabajo):""}</span>`:r.type==="signos"&&v.vitales&&v.vitales.clasif?`<span class="pill ${(bpClass(v.vitales.sis,v.vitales.dia)||{}).cls||""}">${esc(v.vitales.sis+"/"+v.vitales.dia+" · "+v.vitales.clasif)}</span>`:r.type==="valoracion"?`<span class="pill ${{Apto:"green","No apto":"red"}[v.resultado]||"amber"}">${esc(v.resultado||"")}</span>`:r.type==="incamb"?`<span class="pill red">${esc(v.tipo||"")}</span>`:CLOSABLE.includes(r.type)?`<span class="pill ${{Alto:"red",Medio:"amber",Bajo:"green"}[v.riesgo]||""}">Riesgo ${esc(v.riesgo||"")}</span>`:r.type==="accidente"?`<span class="pill ${/Casi/.test(v.tipo||"")?"amber":"red"}">${esc((v.tipo||"").replace(/ \(.*\)/,""))}</span>`:r.type==="permiso"&&v.estado?`<span class="pill blue">${esc(v.estado)}</span>`:"";
- const ct=(isSalud(r)?`<span class="pill">🔒 Salud</span>`:"")+(recOrg(r)==="contratista"&&!isSalud(r)?`<span class="pill">Contratista</span>`:"")+(photoCountOf(r)?`<span class="pill">📷 ${photoCountOf(r)}</span>`:"");
+ const ct=(v.selfie&&v.selfie.lat!=null?`<span class="pill">📍 Ubicación</span>`:v.selfie&&v.selfie.foto?`<span class="pill amber">Sin ubicación</span>`:"")+(isSalud(r)?`<span class="pill">🔒 Salud</span>`:"")+(recOrg(r)==="contratista"&&!isSalud(r)?`<span class="pill">Contratista</span>`:"")+(photoCountOf(r)?`<span class="pill">📷 ${photoCountOf(r)}</span>`:"");
  const st=r.pending?`<span class="pill amber">Por enviar</span>`:CLOSABLE.includes(r.type)?(r.status==="cerrado"?`<span class="pill green">Cerrado</span>`:`<span class="pill amber">Abierto</span>`):r.type==="accidente"&&!r.ack?`<span class="pill red">Sin enterar</span>`:"";
  const sel=S.sel&&!r.pending,on=sel&&S.sel.has(r.id);
  return`<button class="item${on?" sel":""}" data-act="${sel?"selrec":"open"}" data-v="${esc(r.id)}" ${sel?`aria-pressed="${on}"`:""}>${sel?`<span class="ck" aria-hidden="true">${on?"✓":""}</span>`:""}<span class="code c-${m.code}">${m.code}</span><span class="item-main"><span class="item-t">${esc(recTitle(r))}</span><span class="item-m">${esc(r.folio)} · ${fmtDT(r.createdAt)} · ${esc(r.authorName||"")}${recOrg(r)==="contratista"?" ("+esc(recEmp(r)||"contratista")+")":""}${v.area?" · "+esc(v.area):""}${myProjects().length>1?" · "+esc(projName(r.projectId)):""}</span>${risk||st||ct||r.ejemplo?`<span class="pills">${risk}${st}${ct}${r.ejemplo?`<span class="ex">EJEMPLO</span>`:""}</span>`:""}</span></button>`;
@@ -2529,10 +2531,33 @@ function fieldHTML(f,v,p,err){
   case"vitals":{const o=v||{};return wrap(`<div class="vit">${VIT.map(([k,l,u])=>`<label class="vbox"><span>${l}</span><span class="row" style="flex-wrap:nowrap;gap:4px"><input class="inp" type="number" inputmode="decimal" step="any" min="0" data-vit="${f.k}|${k}" value="${esc(o[k]??"")}"><span class="u">${u}</span></span></label>`).join("")}</div><div id="vit_${f.k}">${vitHint(o)}</div>`,false)}
   case"consent":{const em=v==="EMERGENCIA";return wrap(`<div class="consent">${esc(consentText(p))}</div><div class="sigbox" role="button" tabindex="0" data-act="sign" data-k="${f.k}">${v&&!em?`<img src="${esc(v)}" alt="Firma del colaborador">`:em?"Atención de emergencia: sin firma":"Firma del colaborador (toca para firmar)"}</div>${f.emerg?`<label class="row" style="flex-wrap:nowrap;cursor:pointer"><input type="checkbox" data-emerg="${f.k}" ${em?"checked":""} style="width:20px;height:20px;accent-color:var(--accent)"><span class="small">No es posible obtener su firma porque requiere atención de emergencia. Pídela en cuanto sea posible.</span></label>`:""}`,false)}
   case"pct":return"";
+  case"selfie":{const o=v||{};return wrap(`${o.foto?`<div class="selfie"><img src="${esc(o.foto)}" alt="Selfie"><div class="small">${geoText(o)}</div></div>`:""}<div class="row"><button type="button" class="btn sm ${o.foto?"":"primary"}" data-act="selfie" data-k="${f.k}">${o.foto?"Repetir selfie":"📷 Tomar selfie"}</button></div><div class="help">Tu selfie y tu ubicación se guardan solo como evidencia de inicio de jornada, conforme al aviso de privacidad del proyecto. La app no te rastrea: la ubicación se toma una vez, al tomar la foto.</div>`,false)}
   case"auto":{const L=autoLines(f.src,S.form.pid);return wrap(`<div class="auto">${L.length?L.map(l=>`<div>${esc(l)}</div>`).join(""):`<div class="muted">Sin registros para integrar.</div>`}</div><div class="help">Se integra automáticamente al guardar.</div>`,false)}
  }
  return"";
 }
+/* ===== Selfie con ubicación (inicio de jornada) ===== */
+function geoText(o){if(!o)return"";const t=o.at?fmtDT(o.at)+" · ":"";if(o.lat==null)return`${esc(t)}<span style="color:var(--amber)">Sin ubicación: ${esc(o.geoErr||"no disponible")}</span>`;return`${esc(t)}${o.lat.toFixed(6)}, ${o.lng.toFixed(6)} (±${Math.round(o.acc||0)} m) · <a href="https://www.google.com/maps?q=${o.lat},${o.lng}" target="_blank" rel="noopener">Ver en mapa</a>`}
+function getGeo(){return new Promise(res=>{if(!navigator.geolocation){res({err:"el teléfono no da ubicación"});return}navigator.geolocation.getCurrentPosition(p=>res({lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy}),e=>res({err:e.code===1?"permiso de ubicación negado":e.code===3?"tardó demasiado (sin señal GPS)":"no se pudo obtener"}),{enableHighAccuracy:true,timeout:20000,maximumAge:0})})}
+function stopCam(){if(S.cam){S.cam.getTracks().forEach(t=>t.stop());S.cam=null}}
+async function openSelfie(k){
+ const geoP=getGeo();S.selfieK=k;S.geoP=geoP;
+ openModal(`<div class="sheet-head"><h2>Selfie de inicio de jornada</h2><button class="btn sm ghost" data-act="close">Cerrar</button></div>
+ <div class="cam"><video id="camv" playsinline autoplay muted></video></div><div class="small muted" id="geoSt">Obteniendo ubicación…</div>
+ <div class="row"><button class="btn primary" data-act="snap" id="snapBtn" disabled>Tomar foto</button></div>
+ <div id="camAlt" hidden><div class="notice warn">No se pudo abrir la cámara dentro de la app. Toma la selfie con la cámara del teléfono; debe ser en este momento.</div><label class="btn sm primary" for="selfFile">Abrir cámara</label><input type="file" id="selfFile" accept="image/*" capture="user" hidden data-selfie="1"></div>`);
+ geoP.then(g=>{const e=$("#geoSt");if(e)e.innerHTML=g.err?`<span style="color:var(--amber)">Sin ubicación: ${esc(g.err)}. Puedes guardar igual; el administrador lo verá.</span>`:`📍 Ubicación lista (±${Math.round(g.acc)} m)`});
+ try{const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:{ideal:960},height:{ideal:1280}},audio:false});if($("#modal").hidden){st.getTracks().forEach(t=>t.stop());return}S.cam=st;const vd=$("#camv");vd.srcObject=st;await vd.play().catch(()=>{});$("#snapBtn").disabled=false}
+ catch(e){$(".cam").hidden=true;$("#snapBtn").hidden=true;$("#camAlt").hidden=false}}
+// Estampa nombre, fecha, hora y coordenadas sobre la foto (evita reutilizar fotos viejas)
+async function finishSelfie(src){const k=S.selfieK,F=S.form;if(!F)return;const btn=$("#snapBtn");if(btn){btn.disabled=true;btn.textContent="Guardando…"}
+ const g=await S.geoP,at=new Date();const W=src.videoWidth||src.naturalWidth||src.width,H=src.videoHeight||src.naturalHeight||src.height,sc=Math.min(1,960/Math.max(W,H));
+ const c=document.createElement("canvas");c.width=Math.round(W*sc);c.height=Math.round(H*sc);const x=c.getContext("2d");x.drawImage(src,0,0,c.width,c.height);
+ const lines=[authorName(),fmtDT(at.toISOString())+" · "+projName(F.pid),g.err?"Sin ubicación: "+g.err:`${g.lat.toFixed(6)}, ${g.lng.toFixed(6)}  ±${Math.round(g.acc)} m`];
+ const fs=Math.max(14,Math.round(c.width/30)),bh=fs*1.45*lines.length+fs*.8;x.fillStyle="rgba(11,51,86,.78)";x.fillRect(0,c.height-bh,c.width,bh);x.fillStyle="#fff";x.font=`600 ${fs}px Arial, sans-serif`;lines.forEach((l,i)=>x.fillText(l,fs*.6,c.height-bh+fs*1.3+i*fs*1.45));
+ let d=c.toDataURL("image/jpeg",.72);c.width=c.height=0;try{d=await recompress(d,140000)}catch(e){}
+ F.values[k]={foto:d,at:at.toISOString(),...(g.err?{geoErr:g.err}:{lat:g.lat,lng:g.lng,acc:g.acc})};
+ stopCam();closeModal();render();toast(g.err?"Selfie guardada sin ubicación":"Selfie con ubicación lista")}
 function vitHint(o){const b=bpClass(o.sis,o.dia),al=vitalAlerts(o);return`${b?`<div class="row"><span class="pill ${b.cls}">Presión: ${esc(b.t)}</span><span class="muted small">NOM-030-SSA2-2009</span></div>`:""}${al.map(a=>`<div class="notice bad" style="margin-top:6px">${esc(a)}</div>`).join("")}`}
 function viewForm(){
  const F=S.form,m=MOD[F.mk],p=S.projects[F.pid];
@@ -2541,7 +2566,7 @@ function viewForm(){
  <form class="form" id="recForm" novalidate>${fieldsFor(m,p).map(f=>fieldHTML(f,F.values[f.k],p,F.errors[f.k])).join("")}
  <div class="actions"><button type="button" class="btn ghost" data-act="back">Cancelar</button><button type="submit" class="btn ${m.k==="accidente"?"danger":"primary"}" style="flex:1" id="saveBtn">Guardar ${m.code}</button></div></form>`;
 }
-const emptyVal=(f,v)=>v==null||v===""||(Array.isArray(v)&&!v.length)||(f.t==="check"&&Object.keys(v).length<f.items.length)||(f.t==="vitals"&&!(v.sis&&v.dia));
+const emptyVal=(f,v)=>(f.t==="selfie"&&!(v&&v.foto))||v==null||v===""||(Array.isArray(v)&&!v.length)||(f.t==="check"&&Object.keys(v).length<f.items.length)||(f.t==="vitals"&&!(v.sis&&v.dia));
 async function saveForm(e){
  e.preventDefault();
  const F=S.form,m=MOD[F.mk],p=S.projects[F.pid],fs=fieldsFor(m,p);F.errors={};
@@ -2584,7 +2609,7 @@ async function recompress(dataUrl,limit){const img=await loadImg(dataUrl);return
 // Si el registro completo pasa el límite de Firestore (1 MB), vuelve a comprimir las fotos hasta que quepa.
 async function fitDoc(doc,maxLen=900000){for(let pass=0;pass<4&&JSON.stringify(doc).length>maxLen;pass++){const lim=[90000,60000,40000,26000][pass];for(const k in doc.values){const v=doc.values[k];if(Array.isArray(v))for(let i=0;i<v.length;i++){if(typeof v[i]==="string"&&v[i].startsWith("data:image/jpeg")&&v[i].length>lim){try{v[i]=await recompress(v[i],lim)}catch(e){}}}}}return JSON.stringify(doc).length<=maxLen}
 function openModal(html){const m=$("#modal");m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true">${html}</div>`;m.hidden=false}
-function closeModal(){const m=$("#modal");m.hidden=true;m.innerHTML="";schedule()}
+function closeModal(){stopCam();const m=$("#modal");m.hidden=true;m.innerHTML="";schedule()}
 let padCb=null;
 function openSign(title,cb,withName){
  padCb=cb;
@@ -2658,6 +2683,7 @@ function valueHTML(f,v){
   case"auto":return Array.isArray(v)&&v.length?`<div class="auto">${v.map(l=>`<div>${esc(l)}</div>`).join("")}</div>`:"—";
   case"vitals":{const b=bpClass(v.sis,v.dia);return`${esc(vitalsText(v))}${b?` <span class="pill ${b.cls}">${esc(b.t)}</span>`:""}${vitalAlerts(v).map(a=>`<div class="small" style="color:var(--red)">${esc(a)}</div>`).join("")}`}
   case"consent":return v==="EMERGENCIA"?`<span class="pill amber">Atención de emergencia: sin firma</span>`:v===MTOK?`<span class="muted small">Cargando firma…</span>`:`<div class="small muted">Consentimiento expreso firmado (versión ${CONSENT_V})</div><div class="sigbox" style="cursor:default;width:200px;height:80px"><img src="${esc(v)}" alt="Firma del colaborador"></div>`;
+  case"selfie":return v&&v.foto?`<div class="selfie">${v.foto===MTOK?`<div class="ph" style="display:grid;place-items:center;background:var(--sunk);color:var(--ink-2);font-size:12px">Cargando foto…</div>`:`<img src="${esc(v.foto)}" alt="Selfie">`}<div class="small">${geoText(v)}</div></div>`:"—";
   case"pct":return`<span class="pill ${v>=110?"green":v>=20?"amber":"red"}">${esc(v)} %</span>`;
  }
  return esc(v);
@@ -2689,7 +2715,8 @@ function plainVal(f,v){if(v==null||v==="")return"—";switch(f.t){case"datetime"
  case"auto":return Array.isArray(v)&&v.length?v.map(esc).join("<br>"):"—";
  case"vitals":return esc(vitalsText(v));
  case"consent":return v==="EMERGENCIA"?"Atención de emergencia: sin firma del colaborador":v===MTOK?"(firma no disponible sin conexión)":`Consentimiento expreso firmado por el colaborador (versión ${CONSENT_V})<br><img src="${esc(v)}" style="height:50px">`;
- case"pct":return esc(v)+" %"}
+ case"pct":return esc(v)+" %";
+ case"selfie":return v&&v.foto?`${v.foto===MTOK?"(foto no disponible sin conexión)":`<img src="${esc(v.foto)}" style="height:150px;border:1px solid #ccc">`}<br>${geoText(v)}`:"—"}
  return`<span style="white-space:pre-wrap">${esc(v)}</span>`}
 function recBlock(r){r=withMedia(r);const m=MOD[r.type],p=S.projects[r.projectId],v=r.values||{};
  return`<div class="rec"><h3 style="font-size:13px;margin:14px 0 6px">${esc(m.name)} · ${esc(r.folio)}</h3><table style="border-collapse:collapse;width:100%"><tr><th>Proyecto</th><td>${esc(projName(r.projectId))}</td></tr><tr><th>Elaboró</th><td>${esc(r.authorName)}</td></tr><tr><th>Fecha de registro</th><td>${fmtDT(r.createdAt)}</td></tr>${CLOSABLE.includes(r.type)?`<tr><th>Estado</th><td>${r.status==="cerrado"?"Cerrado "+fmtDT(r.closedAt)+" · "+esc(r.closeNote||""):"Abierto"}</td></tr>`:""}${fieldsFor(m,p).filter(f=>v[f.k]!=null&&v[f.k]!==""&&!(Array.isArray(v[f.k])&&!v[f.k].length)).map(f=>`<tr><th>${esc(f.label)}</th><td>${plainVal(f,v[f.k])}</td></tr>`).join("")}</table></div>`}
@@ -3007,7 +3034,7 @@ function viewMas(){
  ${(S.myArco||[]).map(a=>`<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:8px"><span class="small"><b>${esc(a.tipo)}</b> · ${fmtD(a.at)}<br><span class="muted">${esc(a.respuesta||"Sin respuesta todavía")}</span></span><span class="pill ${arcoCls(a)}">${esc(a.estado||"Recibida")}</span></div>`).join("")}</div>
  ${r!=="visor"?`<div class="card"><h3>Portafolio de evidencias EC0680</h3><div class="muted small">Tus formatos agrupados por elemento del estándar.</div><div><button class="btn sm primary" data-act="port">Abrir portafolio</button></div></div>`:""}
  ${installCard()}
- <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.7<br>Elaborado por José Alfredo González García</div>`;
+ <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.8<br>Elaborado por José Alfredo González García</div>`;
 }
 function viewPortfolio(){
  if(wantsHistory())ensureHistory();
@@ -3066,6 +3093,8 @@ document.addEventListener("click",async e=>{
   case"ack":try{await S.db.doc("records/"+v).update({ack:{by:authorName(),at:new Date().toISOString()}});closeModal();toast("Marcado como enterado")}catch(err){toast("No se pudo actualizar.")}break;
   case"del-rec":$("#delConfirm").hidden=false;break;
   case"hist":closeModal();openHist(v);break;
+  case"selfie":openSelfie(b.dataset.k);break;
+  case"snap":{const vd=$("#camv");if(!vd||!vd.videoWidth){toast("La cámara aún no está lista.");return}finishSelfie(vd);break}
   case"hist-dl":b.disabled=true;await dlExpediente(v);b.disabled=false;break;
   case"csv-salud":csvSalud();break;
   case"mydata":myDataDL();break;
@@ -3122,6 +3151,7 @@ document.addEventListener("input",e=>{
 document.addEventListener("change",async e=>{
  const t=e.target;
  if(t.dataset.photo&&S.form){const f=t.files&&t.files[0];if(!f)return;try{(S.form.values[t.dataset.photo]=S.form.values[t.dataset.photo]||[]).push(await compress(f));render()}catch(err){toast("No se pudo leer la imagen. Intenta tomarla de nuevo o elegir otra.")}return}
+ if(t.dataset.selfie&&S.form){const f=t.files&&t.files[0];if(!f)return;if(f.lastModified&&Date.now()-f.lastModified>10*60e3){toast("La foto debe tomarse en este momento. Usa la cámara, no la galería.");return}let url;try{url=URL.createObjectURL(f);const img=await loadImg(url);await finishSelfie(img)}catch(err){toast("No se pudo leer la foto.")}finally{if(url)URL.revokeObjectURL(url)}return}
  if(t.dataset.emerg&&S.form){S.form.values[t.dataset.emerg]=t.checked?"EMERGENCIA":"";render();return}
  if(t.dataset.logo){const f=t.files&&t.files[0];if(!f)return;syncProject();try{S.editProject.logo=await compress(f,240,1,"image/png");render()}catch(err){toast("No se pudo leer el logo.")}return}
  const c=t.dataset.chg;if(!c)return;
