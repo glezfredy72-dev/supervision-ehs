@@ -2266,11 +2266,12 @@ async function boot(){
   if(!first)alertNew(s);
   schedule();
  };
- db.collection("projects").onSnapshot(s=>{S.projects={};s.docs.forEach(d=>S.projects[d.id]={id:d.id,...d.data()});S.loaded.p=1;if(S.subTeam){S.subTeam();S.subCons();S.subHealth()}if(S.isAdmin)syncSoon();schedule()},err);
+ db.collection("projects").onSnapshot(s=>{S.projects={};s.docs.forEach(d=>S.projects[d.id]={id:d.id,...d.data()});S.loaded.p=1;if(S.subTeam){S.subTeam();S.subCons();S.subHealth();S.subAcuses()}if(S.isAdmin)syncSoon();schedule()},err);
  if(S.isAdmin){
   db.collection("members").onSnapshot(s=>{S.members={};s.docs.forEach(d=>S.members[d.id]={id:d.id,...d.data()});S.loaded.m=1;syncSoon();schedule()},err);
   db.collection("requests").onSnapshot(s=>{S.requests={};s.docs.forEach(d=>S.requests[d.id]={id:d.id,...d.data()});S.loaded.q=1;schedule()},err);
   db.collection("consents").onSnapshot(s=>{S.consents={};s.docs.forEach(d=>addCons(S.consents,d.data(),1));S.loaded.c=1;schedule()},e=>{console.warn(e);S.loaded.c=1;schedule()});
+  db.collection("acuses").onSnapshot(s=>{S.acuses=s.docs.map(d=>d.data());schedule()},e=>console.warn("acuses",e));
   db.collection("arco").onSnapshot(s=>{S.arco=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},e=>console.warn("arco",e));
   db.collection("pub").onSnapshot(s=>{S.pub={};s.docs.forEach(d=>S.pub[d.id]=d.data());S.pubLoaded=1;syncSoon()},e=>console.warn(e));
   multiSub(windowMonths().map(ym=>[ym,db.collection("records").where("ym","==",ym)]),onRecs,err);
@@ -2296,15 +2297,17 @@ async function boot(){
    const k=pids.join(",");if(k===reqKey)return;reqKey=k;if(reqUnsub)reqUnsub();reqUnsub=null;S.reqProj={};mergeReqs();
    if(pids.length)reqUnsub=multiSub(pids.map(pid=>[pid,db.collection("requests").where("projectId","==",pid)]),s=>{S.reqProj={};s.docs.forEach(d=>S.reqProj[d.id]={id:d.id,...d.data()});mergeReqs();schedule()},err)};
   S.subTeam=subTeam;
-  db.doc("members/"+S.uid).onSnapshot(d=>{if(d.exists)S.members[S.uid]={id:S.uid,...d.data()};else delete S.members[S.uid];S.loaded.m=1;subRecords();subTeam();subCons();subHealth();schedule()},()=>{delete S.members[S.uid];S.loaded.m=1;subRecords();subTeam();schedule()});
+  db.doc("members/"+S.uid).onSnapshot(d=>{if(d.exists)S.members[S.uid]={id:S.uid,...d.data()};else delete S.members[S.uid];S.loaded.m=1;subRecords();subTeam();subCons();subHealth();S.subAcuses&&S.subAcuses();schedule()},()=>{delete S.members[S.uid];S.loaded.m=1;subRecords();subTeam();schedule()});
   db.doc("requests/"+S.uid).onSnapshot(d=>{S.reqOwn=d.exists?{id:S.uid,...d.data()}:null;mergeReqs();S.loaded.q=1;schedule()},()=>{S.reqOwn=null;mergeReqs();S.loaded.q=1;schedule()});
   // Aceptaciones del aviso de privacidad: las propias y, para el administrador de proyecto, las de su equipo.
+  db.collection("acuses").where("uid","==",S.uid).onSnapshot(s=>{S.myAcuses=s.docs.map(d=>d.data());schedule()},e=>console.warn("acuses",e));
   db.collection("arco").where("by","==",S.uid).onSnapshot(s=>{S.myArco=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.at).localeCompare(String(a.at)));schedule()},e=>console.warn("arco",e));
   db.collection("consents").where("uid","==",S.uid).onSnapshot(s=>{S.myCons={};s.docs.forEach(d=>addCons(S.myCons,d.data()));S.loaded.c=1;schedule()},e=>{console.warn(e);S.loaded.c=1;schedule()});
   let consUnsub=null,consKey=null;
   const subCons=()=>{const pids=role()==="padmin"?myPids().slice(0,30):[];const k=pids.join(",");if(k===consKey)return;consKey=k;if(consUnsub)consUnsub();consUnsub=null;S.consents={};
    if(pids.length)consUnsub=multiSub(pids.map(pid=>[pid,db.collection("consents").where("pid","==",pid)]),s=>{S.consents={};s.docs.forEach(d=>addCons(S.consents,d.data(),1));schedule()},err)};
-  S.subCons=subCons;S.subHealth=subHealth;
+  S.subCons=subCons;
+  let acUnsub=null,acKey=null;const subAcuses=()=>{const pids=role()==="padmin"?myPids().slice(0,30):[];const k=pids.join(",");if(k===acKey)return;acKey=k;if(acUnsub)acUnsub();acUnsub=null;S.acuses=[];if(pids.length)acUnsub=multiSub(pids.map(pid=>[pid,db.collection("acuses").where("pid","==",pid)]),s=>{S.acuses=s.docs.map(d=>d.data());schedule()},err)};S.subAcuses=subAcuses;S.subHealth=subHealth;
  }
  S.status="ready";render();
  if(S.outbox.length)setTimeout(flush,1500);
@@ -2380,8 +2383,8 @@ const ICONS={
  more:'<circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/>'
 };
 const svg=n=>`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
-const SUBS=["form","proyecto","portafolio","usuario","registro"];
-const TITLES={dashboard:"Tablero",campo:"Campo",registros:"Registros",admin:"Administrar",mas:"Más",proyecto:"Proyecto",portafolio:"Portafolio EC0680",usuario:"Usuario",registro:"Solicitar acceso"};
+const SUBS=["form","proyecto","portafolio","usuario","registro","documentos"];
+const TITLES={dashboard:"Tablero",campo:"Campo",registros:"Registros",admin:"Administrar",mas:"Más",proyecto:"Proyecto",portafolio:"Portafolio EC0680",documentos:"Documentos del proyecto",usuario:"Usuario",registro:"Solicitar acceso"};
 function go(tab){S.stack=[];S.tab=tab;S.sel=null;S.form=null;S.editProject=null;render(true)}
 function push(tab){S.stack.push(S.tab);S.tab=tab;render(true)}
 function back(){S.form=null;S.editProject=null;S.tab=S.stack.pop()||(role()?TABS[role()][0][0]:null);render(true)}
@@ -2397,7 +2400,7 @@ function renderChrome(){
  const pend=(r==="admin"||r==="padmin")?pendingRequests().length:0;
  const unack=r!=="supervisor"?visible().filter(x=>x.type==="accidente"&&!x.ack&&!x.pending).length:0;
  const cur=sub?(S.stack[0]||S.tab):S.tab;
- tb.innerHTML=TABS[r].map(([k,l,ic])=>{const b=k==="admin"?pend:k==="dashboard"?unack:k==="mas"?S.outbox.length:0;return`<button data-act="tab" data-v="${k}" ${cur===k?'aria-current="page"':""}><span class="tic">${svg(ic)}</span>${l}${b?`<span class="tbadge">${b}</span>`:""}</button>`}).join("");
+ tb.innerHTML=TABS[r].map(([k,l,ic])=>{const b=k==="admin"?pend:k==="dashboard"?unack:k==="mas"?S.outbox.length+docsPending().length:0;return`<button data-act="tab" data-v="${k}" ${cur===k?'aria-current="page"':""}><span class="tic">${svg(ic)}</span>${l}${b?`<span class="tbadge">${b}</span>`:""}</button>`}).join("");
 }
 function render(top){
  const app=$("#app");
@@ -2412,7 +2415,7 @@ function render(top){
  const valid=TABS[r].map(x=>x[0]).concat(SUBS);
  if(!S.tab||!valid.includes(S.tab)||(S.tab==="form"&&!S.form)||(S.tab==="proyecto"&&!S.editProject))S.tab=TABS[r][0][0];
  renderChrome();
- const v={dashboard:viewDashboard,campo:viewCampo,registros:viewRecords,admin:viewAdmin,mas:viewMas,form:viewForm,proyecto:viewProjectEdit,portafolio:viewPortfolio,usuario:viewApprove}[S.tab];
+ const v={dashboard:viewDashboard,campo:viewCampo,registros:viewRecords,admin:viewAdmin,mas:viewMas,form:viewForm,proyecto:viewProjectEdit,portafolio:viewPortfolio,usuario:viewApprove,documentos:viewDocs}[S.tab];
  const sc=$("#scroll"),y=sc.scrollTop;
  app.innerHTML=v();
  sc.scrollTop=top?0:y;
@@ -2482,7 +2485,9 @@ function viewCampo(){
  const done=new Set(mine.filter(r=>r.day===today).map(r=>r.type));
  const steps=pf.includes("seguridad")?DAY_STEPS.filter(k=>mods.some(m=>m.k===k)):[];
  const open=allRecords().filter(r=>r.projectId===p.id&&isOpen(r)&&(seesAll()||r.authorId===S.uid)).slice(0,5);
+ const dp=docsPending();
  return`${syncBanner()}
+ ${dp.length?`<button class="notice warn" data-act="docs" style="text-align:left;border:0;cursor:pointer;width:100%"><b>${dp.length} documento${dp.length>1?"s":""} por firmar de enterado</b><br><span class="small">${esc(dp.slice(0,3).map(x=>x.d.titulo).join(" · "))}</span></button>`:""}
  <div class="proj"><div class="logo">${p.logo?`<img src="${esc(p.logo)}" alt="">`:esc((p.nombre||"?").slice(0,2).toUpperCase())}</div><div style="min-width:0;flex:1"><h2>${esc(p.nombre)}</h2><div class="muted small">${esc(p.cliente||"")}</div></div></div>
  ${ps.length>1?`<select class="inp" data-chg="proj" aria-label="Proyecto activo">${ps.map(x=>`<option value="${esc(x.id)}" ${x.id===p.id?"selected":""}>${esc(x.nombre)}</option>`).join("")}</select>`:""}
  ${all.some(m=>m.k==="accidente")?`<button class="sos" data-act="new" data-v="accidente"><span class="i">!</span><span><span class="k">Aviso de incidente laboral</span><br><span class="d">Lesión, casi accidente o daño material.</span></span></button>`:""}
@@ -2808,6 +2813,60 @@ function csvSalud(){const rs=filtered().filter(isSalud);const q=s=>'"'+String(s?
  logBit("Exportó datos de salud (CSV)",rs.length+" registros");
  save(`salud-confidencial-${localD()}.csv`,"﻿"+cols.map(q).join(",")+"\n"+rows.join("\n"))}
 
+/* ===================== Documentos del proyecto (políticas, procedimientos) con firma de enterado ===================== */
+const DOC_T=["Política","Procedimiento","Instructivo","Reglamento","Plan de emergencia","Programa","Formato","Otro"];
+function projDocs(p){return((p&&p.docs)||[]).filter(d=>d&&d.url)}
+function myAcuse(pid,d){return(S.myAcuses||[]).filter(a=>a.pid===pid&&a.docId===d.id&&a.version===(d.version||1)).sort((a,b)=>String(b.at).localeCompare(String(a.at)))[0]}
+function docsPending(){if(S.isAdmin)return[];const out=[];myProjects().forEach(p=>projDocs(p).forEach(d=>{if(d.firma&&!myAcuse(p.id,d))out.push({p,d})}));return out}
+function viewDocs(){const ps=myProjects().filter(p=>projDocs(p).length);
+ if(!ps.length)return`<div class="empty">Tu proyecto aún no tiene documentos publicados.</div>`;
+ return`<div class="muted small">Lee cada documento. Los que piden firma quedan registrados con tu firma, la fecha y la versión.</div>${ps.map(p=>`<section class="section">${ps.length>1?`<h2>${esc(p.nombre)}</h2>`:""}<div class="list">${projDocs(p).map(d=>{const a=myAcuse(p.id,d);return`<button class="item" data-act="doc-open" data-v="${esc(p.id)}|${esc(d.id)}"><span class="code">${esc((d.tipo||"Doc").slice(0,3).toUpperCase())}</span><span class="item-main"><span class="item-t">${esc(d.titulo)}</span><span class="item-m">${esc(d.tipo||"")} · versión ${d.version||1}${d.desc?" · "+esc(d.desc).slice(0,80):""}</span></span><span class="pill ${!d.firma?"":a?"green":"amber"}">${!d.firma?"Consulta":a?"Firmado":"Por firmar"}</span></button>`}).join("")}</div></section>`).join("")}`}
+function openDoc(pid,did){const p=S.projects[pid],d=projDocs(p).find(x=>x.id===did);if(!d)return;const a=myAcuse(pid,d);S.docRead=S.docRead||{};
+ openModal(`<div class="sheet-head"><div><span class="ey">${esc(d.tipo||"Documento")} · versión ${d.version||1}</span><h2>${esc(d.titulo)}</h2><div class="muted small">${esc(p.nombre)}</div></div><button class="btn sm ghost" data-act="close">Cerrar</button></div>
+ ${d.desc?`<div class="card"><div style="white-space:pre-wrap">${esc(d.desc)}</div></div>`:""}
+ <a class="btn primary" href="${esc(d.url)}" target="_blank" rel="noopener" data-act="doc-read" data-v="${esc(pid)}|${esc(d.id)}">Abrir documento ↗</a>
+ ${!d.firma?`<div class="help">Documento de consulta; no requiere firma.</div>`:a?`<div class="notice ok">Firmaste de enterado el ${fmtDT(a.at)} (versión ${a.version}).</div>${a.firma?`<div class="sigbox" style="cursor:default;width:200px;height:80px"><img src="${esc(a.firma)}" alt="Tu firma"></div>`:""}`:
+ `<div class="card"><label class="row" style="flex-wrap:nowrap;cursor:pointer;align-items:flex-start"><input type="checkbox" id="doc-ok" style="width:22px;height:22px;flex:none;accent-color:var(--accent);margin-top:1px"><span>Leí y entendí <b>${esc(d.titulo)}</b> (versión ${d.version||1}) y me comprometo a cumplirlo.</span></label><button class="btn primary" data-act="doc-sign" data-v="${esc(pid)}|${esc(d.id)}">Firmar de enterado</button><div class="help">Primero abre el documento.</div></div>`}`)}
+async function saveAcuse(pid,d,firma){const m=member()||{},p=S.projects[pid];const a={uid:S.uid,nombre:m.nombre||S.meName||"",empresa:m.empresa||"",pid,docId:d.id,titulo:d.titulo,version:d.version||1,firma,at:new Date().toISOString()};
+ S.myAcuses=(S.myAcuses||[]).concat(a);closeModal();render();
+ try{await S.db.collection("acuses").doc(`${S.uid}_${d.id}_v${a.version}`).set(a);logBit("Firmó de enterado",`${d.titulo} v${a.version}`,pid);toast("Firma registrada")}catch(e){S.myAcuses=S.myAcuses.filter(x=>x!==a);render();toast("No se pudo registrar la firma. Revisa tu conexión.")}}
+// Administración de documentos
+function viewDocsAdmin(){const ps=(S.isAdmin?allProjects():myProjects());if(!ps.length)return`<div class="empty">Crea un proyecto primero.</div>`;
+ const pid=S.dproj&&ps.some(p=>p.id===S.dproj)?S.dproj:ps[0].id;S.dproj=pid;const p=S.projects[pid],docs=projDocs(p);
+ const team=Object.values(S.members).filter(m=>m.role!=="admin"&&!m.rejected&&m.active!==false&&(m.projects||[]).includes(pid));
+ return`<select class="inp" data-chg="dproj" aria-label="Proyecto">${ps.map(x=>`<option value="${esc(x.id)}" ${x.id===pid?"selected":""}>${esc(x.nombre)}</option>`).join("")}</select>
+ <div class="notice">Publica políticas, procedimientos y otros documentos con su enlace (Drive, SharePoint o sitio web, con permiso de lectura). Los usuarios del proyecto los ven en <b>Más → Documentos del proyecto</b> y en Campo, y firman de enterado los que lo requieren.</div>
+ <div class="row"><button class="btn primary sm" data-act="doc-new">+ Agregar documento</button><span class="spacer"></span>${docs.length&&S.dl?`<button class="btn sm" data-act="doc-csv">Descargar firmas (CSV)</button><button class="btn sm" data-act="doc-rep">Reporte con firmas</button>`:""}</div>
+ ${docs.length?`<div class="list">${docs.map(d=>{const sig=team.filter(m=>(S.acuses||[]).some(a=>a.uid===m.id&&a.pid===pid&&a.docId===d.id&&a.version===(d.version||1)));return`<button class="item" data-act="doc-adm" data-v="${esc(d.id)}"><span class="code">${esc((d.tipo||"Doc").slice(0,3).toUpperCase())}</span><span class="item-main"><span class="item-t">${esc(d.titulo)}</span><span class="item-m">${esc(d.tipo||"")} · versión ${d.version||1} · ${d.firma?`${sig.length} de ${team.length} firmaron`:"solo consulta"}</span></span>${d.firma?`<span class="pill ${team.length&&sig.length===team.length?"green":"amber"}">${team.length?Math.round(sig.length/team.length*100):0} %</span>`:""}</button>`}).join("")}</div>`:`<div class="empty">Sin documentos en este proyecto.</div>`}`}
+function openDocEdit(did){const p=S.projects[S.dproj],d=did?projDocs(p).find(x=>x.id===did):null;S.docEdit=did||null;
+ openModal(`<div class="sheet-head"><h2>${d?"Editar documento":"Agregar documento"}</h2><button class="btn sm ghost" data-act="close">Cerrar</button></div><form class="form" id="docForm" novalidate>
+ <div class="field"><label for="dc-t">Título <span class="req">*</span></label><input class="inp" id="dc-t" value="${esc(d?d.titulo:"")}" placeholder="Ej. Política de seguridad, salud y medio ambiente"></div>
+ <div class="field"><label for="dc-y">Tipo</label><select class="inp" id="dc-y">${DOC_T.map(x=>`<option ${d&&d.tipo===x?"selected":""}>${x}</option>`).join("")}</select></div>
+ <div class="field"><label for="dc-u">Enlace <span class="req">*</span></label><input class="inp" id="dc-u" type="url" inputmode="url" value="${esc(d?d.url:"")}" placeholder="https://…"><div class="help">Comparte el archivo como "cualquier persona con el enlace puede ver".</div></div>
+ <div class="field"><label for="dc-d">Descripción o puntos clave</label><textarea class="inp" id="dc-d">${esc(d?d.desc||"":"")}</textarea></div>
+ <label class="row" style="flex-wrap:nowrap;cursor:pointer"><input type="checkbox" id="dc-f" ${!d||d.firma?"checked":""} style="width:20px;height:20px;accent-color:var(--accent)"><span>Requiere firma de enterado</span></label>
+ ${d?`<label class="row" style="flex-wrap:nowrap;cursor:pointer"><input type="checkbox" id="dc-v" style="width:20px;height:20px;accent-color:var(--accent)"><span>Es una versión nueva (actual: ${d.version||1}). Todos vuelven a firmar; las firmas anteriores se conservan.</span></label>`:""}
+ <button class="btn primary" type="submit">Guardar documento</button></form>
+ ${d?`<div class="zone"><button class="btn sm ghost" data-act="doc-del" data-v="${esc(d.id)}">Quitar documento</button><div class="help">Deja de mostrarse; las firmas ya registradas se conservan.</div></div>`:""}`)}
+async function saveDocsOf(pid,docs){try{await S.db.doc("projects/"+pid).update({docs});return true}catch(e){toast("No se pudo guardar. Solo el administrador puede modificar los documentos.");return false}}
+async function submitDoc(){const pid=S.dproj,p=S.projects[pid];const t=$("#dc-t").value.trim(),u=$("#dc-u").value.trim();if(!t){toast("Escribe el título.");return}if(!/^https:\/\/\S+$/i.test(u)){toast("El enlace debe empezar con https://");return}
+ const docs=((p&&p.docs)||[]).slice();const base={titulo:t,tipo:$("#dc-y").value,url:u,desc:$("#dc-d").value.trim(),firma:$("#dc-f").checked,updatedAt:new Date().toISOString()};
+ if(S.docEdit){const i=docs.findIndex(x=>x.id===S.docEdit);if(i<0)return;const nv=$("#dc-v")&&$("#dc-v").checked;docs[i]={...docs[i],...base,version:(docs[i].version||1)+(nv?1:0)};if(await saveDocsOf(pid,docs)){logBit(nv?"Publicó versión nueva de documento":"Editó documento",`${t} v${docs[i].version}`,pid);closeModal();toast("Documento guardado")}}
+ else{const d={id:rid(8),...base,version:1,createdAt:base.updatedAt};docs.push(d);if(await saveDocsOf(pid,docs)){logBit("Publicó documento",t,pid);closeModal();toast("Documento publicado")}}}
+function openDocAdm(did){const pid=S.dproj,p=S.projects[pid],d=projDocs(p).find(x=>x.id===did);if(!d)return;
+ const team=Object.values(S.members).filter(m=>m.role!=="admin"&&!m.rejected&&m.active!==false&&(m.projects||[]).includes(pid)).sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||""));
+ const ac=m=>(S.acuses||[]).filter(a=>a.uid===m.id&&a.pid===pid&&a.docId===d.id&&a.version===(d.version||1))[0];const pend=team.filter(m=>!ac(m));
+ openModal(`<div class="sheet-head"><div><span class="ey">${esc(d.tipo||"")} · versión ${d.version||1}</span><h2>${esc(d.titulo)}</h2></div><button class="btn sm ghost" data-act="close">Cerrar</button></div>
+ <div class="row"><a class="btn sm" href="${esc(d.url)}" target="_blank" rel="noopener">Abrir ↗</a><button class="btn sm" data-act="doc-edit" data-v="${esc(d.id)}">Editar</button></div>
+ ${d.firma?`<div class="card"><h3>${team.length-pend.length} de ${team.length} firmaron</h3>${team.length?`<div class="list">${team.map(m=>{const a=ac(m);return`<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:6px"><span class="small"><b>${esc(m.nombre)}</b><br><span class="muted">${esc(m.empresa||"")}</span></span>${a?`<span class="pill green">${fmtD(a.at)}</span>`:`<span class="pill amber">Pendiente</span>`}</div>`}).join("")}</div>`:`<div class="muted small">No hay usuarios activos en el proyecto.</div>`}
+ ${pend.length?`<a class="btn sm" href="https://wa.me/?text=${encodeURIComponent(`Recordatorio: lee y firma de enterado "${d.titulo}" en la app Supervisión EHS (Más → Documentos del proyecto). ${location.href.split("#")[0]}`)}" target="_blank" rel="noopener">Recordar por WhatsApp</a><a class="btn sm" href="${gmailURL(pend.map(m=>m.email).filter(Boolean).join(","),"Pendiente: firma de enterado · "+d.titulo,`Hola:\n\nTienes pendiente leer y firmar de enterado "${d.titulo}" (versión ${d.version||1}) del proyecto ${p.nombre}.\n\nEntra a la app Supervisión EHS → Más → Documentos del proyecto.\n${location.href.split("#")[0]}\n\nGracias.`)}" target="_blank" rel="noopener">Recordar por Gmail (${pend.length})</a>`:""}</div>`:`<div class="help">Documento de consulta; no requiere firma.</div>`}`)}
+function docRows(pid){const p=S.projects[pid];const team=Object.values(S.members).filter(m=>m.role!=="admin"&&!m.rejected&&m.active!==false&&(m.projects||[]).includes(pid));const rows=[];
+ projDocs(p).filter(d=>d.firma).forEach(d=>team.forEach(m=>{const a=(S.acuses||[]).find(x=>x.uid===m.id&&x.pid===pid&&x.docId===d.id&&x.version===(d.version||1));rows.push({d,m,a})}));return rows}
+function docCSV(){const pid=S.dproj,q=x=>'"'+String(x??"").replace(/"/g,'""')+'"';const rows=docRows(pid);
+ save(`firmas-documentos-${localD()}.csv`,"﻿"+["Proyecto","Documento","Tipo","Versión","Usuario","Empresa","Estado","Fecha de firma"].map(q).join(",")+"\n"+rows.map(r=>[projName(pid),r.d.titulo,r.d.tipo,r.d.version||1,r.m.nombre,r.m.empresa,r.a?"Firmado":"Pendiente",r.a?fmtDT(r.a.at):""].map(q).join(",")).join("\n"))}
+function docReport(){const pid=S.dproj,p=S.projects[pid];const body=projDocs(p).filter(d=>d.firma).map(d=>{const rs=docRows(pid).filter(r=>r.d.id===d.id);return`<div class="rec"><h2>${esc(d.titulo)} · versión ${d.version||1}</h2><p class="muted">${esc(d.tipo||"")} · <a href="${esc(d.url)}">${esc(d.url)}</a></p><table style="border-collapse:collapse;width:100%"><tr><th style="width:auto">Nombre</th><th style="width:auto">Empresa</th><th style="width:auto">Fecha</th><th style="width:auto">Firma</th></tr>${rs.map(r=>`<tr><td>${esc(r.m.nombre)}</td><td>${esc(r.m.empresa||"")}</td><td>${r.a?fmtDT(r.a.at):"Pendiente"}</td><td>${r.a&&r.a.firma?`<img src="${r.a.firma}" style="height:36px">`:""}</td></tr>`).join("")}</table></div>`}).join("");
+ logBit("Descargó reporte de firmas de documentos",projName(pid),pid);save(`Firmas-de-enterado-${projName(pid).replace(/\W+/g,"_")}.html`,docShell("Firmas de enterado de documentos",p.nombre,p,body))}
+
 /* ===================== Privacidad: ARCO y bitácora ===================== */
 const ARCO_T=["Acceso a mis datos","Rectificación (corregir datos)","Cancelación (eliminar datos)","Oposición a su uso","Revocación del consentimiento"];
 function addBiz(d,n){d=new Date(d);while(n>0){d.setDate(d.getDate()+1);const w=d.getDay();if(w&&w<6)n--}return d}
@@ -2921,11 +2980,16 @@ function drawCharts(){
 
 /* ===================== Administración ===================== */
 function viewAdmin(){
- const pa=!S.isAdmin,reqs=pendingRequests().filter(q=>!pa||q.id!==S.uid),mem=Object.values(S.members).filter(m=>m.role!=="admin"&&m.id!==S.uid).sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||""));
+ const pa=!S.isAdmin,uf=S.uf||(S.uf={proj:"all",q:""}),uq=uf.q.trim().toLowerCase(),inP=pids=>uf.proj==="all"||(uf.proj==="none"?!pids.length:pids.includes(uf.proj)),txt=o=>!uq||`${o.nombre||""} ${o.email||""} ${o.empresa||""}`.toLowerCase().includes(uq);
+ const reqs=pendingRequests().filter(q=>(!pa||q.id!==S.uid)&&inP(q.projectId?[q.projectId]:[])&&txt(q)),mem=Object.values(S.members).filter(m=>m.role!=="admin"&&m.id!==S.uid&&inP(m.projects||[])&&txt(m)).sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||""));
+ const allMem=Object.values(S.members).filter(m=>m.role!=="admin"&&m.id!==S.uid).length;
  const ps=pa?myProjects():Object.values(S.projects).sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||""));
  const ex=S.records.filter(r=>r.ejemplo).length;
- return`<div class="chips"><button class="chip" data-act="aseg" data-v="usuarios" aria-pressed="${S.adminSeg==="usuarios"}">Usuarios${reqs.length?` (${reqs.length} pendiente${reqs.length>1?"s":""})`:""}</button><button class="chip" data-act="aseg" data-v="proyectos" aria-pressed="${S.adminSeg==="proyectos"}">Proyectos</button>${pa?"":`<button class="chip" data-act="aseg" data-v="privacidad" aria-pressed="${S.adminSeg==="privacidad"}">Privacidad${arcoOpen().length?` (${arcoOpen().length})`:""}</button>`}</div>
- ${S.adminSeg==="privacidad"&&!pa?viewPrivacy():S.adminSeg==="usuarios"?`<div class="notice">${pa?`Administras: <b>${esc(ps.map(p=>p.nombre).join(", "))}</b>. Aquí aparecen las solicitudes y los usuarios de tus proyectos.`:"Comparte el enlace de la app: cada supervisor se registra y su solicitud aparece aquí. Para un cliente o responsable de proyecto, crea su usuario con <b>Crear usuario</b>."}</div><button class="btn primary" data-act="user-new">Crear usuario por proyecto</button>
+ return`<div class="chips"><button class="chip" data-act="aseg" data-v="usuarios" aria-pressed="${S.adminSeg==="usuarios"}">Usuarios${reqs.length?` (${reqs.length} pendiente${reqs.length>1?"s":""})`:""}</button><button class="chip" data-act="aseg" data-v="proyectos" aria-pressed="${S.adminSeg==="proyectos"}">Proyectos</button><button class="chip" data-act="aseg" data-v="documentos" aria-pressed="${S.adminSeg==="documentos"}">Documentos</button>${pa?"":`<button class="chip" data-act="aseg" data-v="privacidad" aria-pressed="${S.adminSeg==="privacidad"}">Privacidad${arcoOpen().length?` (${arcoOpen().length})`:""}</button>`}</div>
+ ${S.adminSeg==="documentos"?viewDocsAdmin():S.adminSeg==="privacidad"&&!pa?viewPrivacy():S.adminSeg==="usuarios"?`<div class="notice">${pa?`Administras: <b>${esc(ps.map(p=>p.nombre).join(", "))}</b>. Aquí aparecen las solicitudes y los usuarios de tus proyectos.`:"Comparte el enlace de la app: cada supervisor se registra y su solicitud aparece aquí. Para un cliente o responsable de proyecto, crea su usuario con <b>Crear usuario</b>."}</div><button class="btn primary" data-act="user-new">Crear usuario por proyecto</button>
+ <div class="card" style="gap:8px"><div class="row" style="flex-wrap:nowrap"><select class="inp" data-chg="ufproj" aria-label="Proyecto"><option value="all">Todos los proyectos</option>${(pa?myProjects():Object.values(S.projects).sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||""))).map(p=>`<option value="${esc(p.id)}" ${uf.proj===p.id?"selected":""}>${esc(p.nombre)}${p.active===false?" (archivado)":""}</option>`).join("")}${pa?"":`<option value="none" ${uf.proj==="none"?"selected":""}>Sin proyecto asignado</option>`}</select></div>
+ <input class="inp" type="search" id="uf-q" data-inp="uq" placeholder="Buscar por nombre, correo o empresa" value="${esc(uf.q)}">
+ ${uf.proj!=="all"||uq?`<div class="row"><span class="muted small">${mem.length} de ${allMem} usuarios${reqs.length?` · ${reqs.length} solicitud${reqs.length>1?"es":""}`:""}</span><span class="spacer"></span><button class="btn sm ghost" data-act="uf-clear">Quitar filtro</button></div>`:""}</div>
  <section class="section"><h2>Solicitudes pendientes</h2>${reqs.length?`<div class="list">${reqs.map(q=>`<button class="item" data-act="req" data-v="${esc(q.id)}"><span class="item-main"><span class="item-t">${esc(q.nombre)}</span><span class="item-m">${esc(q.email)} · ${esc(q.empresa)}</span><span class="item-m">Pide: ${ROLE_L[q.rol]||"Supervisor"} · ${esc((PERF[q.perfil]||PERF.seguridad).split(" (")[0])} · ${esc(ORG[q.origen]||ORG.principal)} · ${esc(projName(q.projectId))} · ${fmtDT(q.createdAt)}</span></span><span class="btn sm primary">Revisar</span></button>`).join("")}</div>`:`<div class="empty">No hay solicitudes pendientes.</div>`}</section>
  <section class="section"><h2>Usuarios</h2>${mem.length?`<div class="list">${mem.map(m=>`<button class="item" data-act="req" data-v="${esc(m.id)}"><span class="item-main"><span class="item-t">${esc(m.nombre)}</span><span class="item-m">${esc(m.email||"")}</span><span class="item-m">${esc(orgLabel(m.origen||"principal",m.empresa))}</span><span class="item-m">${esc((m.projects||[]).map(projName).join(", "))||"Sin proyectos"}</span><span class="item-m">Perfiles: ${esc(perfilesOf(m).map(k=>PERF[k].split(" (")[0]).join(", "))}</span></span><span class="pill ${m.rejected?"":!m.active?"red":m.role==="padmin"?"solid":m.role==="lider"?"accent":m.role==="visor"?"":"blue"}">${m.rejected?"Rechazado":!m.active?"Suspendido":ROLE_L[m.role]||"Supervisor"}</span></button>`).join("")}</div>`:`<div class="empty">Aún no hay usuarios aprobados.</div>`}</section>`
  :`<section class="section"><div class="shead"><h2>${pa?"Tus proyectos":"Proyectos"}</h2>${pa?"":`<button class="btn sm primary" data-act="proj-edit" data-v="">Nuevo proyecto</button>`}</div>
@@ -3044,12 +3108,13 @@ function viewMas(){
  ${S.outbox.map(o=>`<div class="row" style="border-top:1px solid var(--line);padding-top:8px;flex-wrap:nowrap"><span class="small" style="flex:1"><b>${esc(o.doc.folio)}</b> · ${esc(MOD[o.doc.type].name)}${o.err?` · <span style="color:var(--red)">${esc(o.err)}</span>`:""}</span><button class="btn sm ghost" data-act="discard" data-v="${esc(o.id)}">Descartar</button></div>`).join("")}
  ${S.outbox.length?`<div><button class="btn sm" data-act="sync" ${S.online?"":"disabled"}>Enviar ahora</button></div>`:""}</div>
  ${(()=>{const ps=myProjects().filter(p=>p.aviso);return ps.length?`<div class="card"><h3>Avisos de privacidad</h3>${ps.map(p=>{const c=S.myCons[p.id];return`<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:8px"><span class="small"><b>${esc(p.nombre)}</b><br><span class="muted">${S.isAdmin?"Lo aceptan los usuarios del proyecto.":c&&c.url===p.aviso?"Aceptado el "+fmtDT(c.at):"Pendiente"}</span></span>${avisoLink(p,"Ver")}</div>`}).join("")}</div>`:""})()}
+ ${(()=>{const n=myProjects().reduce((s,p)=>s+projDocs(p).length,0),pd=docsPending().length;return n?`<div class="card"><h3>Documentos del proyecto</h3><div class="muted small">${pd?`<b>${pd} por firmar de enterado.</b> `:""}${n} documento${n>1?"s":""} publicado${n>1?"s":""}: políticas, procedimientos y más.</div><div><button class="btn sm ${pd?"primary":""}" data-act="docs">Ver documentos</button></div></div>`:""})()}
  <div class="card"><h3>Privacidad y mis datos</h3><div class="muted small">Puedes descargar los datos que la app guarda de ti y ejercer tus derechos de acceso, rectificación, cancelación y oposición (ARCO) o revocar tu consentimiento. La respuesta llega en máximo 20 días hábiles.</div>
  <div class="row"><button class="btn sm" data-act="mydata">Descargar mis datos</button><button class="btn sm" data-act="arco-new">Ejercer derechos ARCO</button></div>
  ${(S.myArco||[]).map(a=>`<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:8px"><span class="small"><b>${esc(a.tipo)}</b> · ${fmtD(a.at)}<br><span class="muted">${esc(a.respuesta||"Sin respuesta todavía")}</span></span><span class="pill ${arcoCls(a)}">${esc(a.estado||"Recibida")}</span></div>`).join("")}</div>
  ${r!=="visor"?`<div class="card"><h3>Portafolio de evidencias EC0680</h3><div class="muted small">Tus formatos agrupados por elemento del estándar.</div><div><button class="btn sm primary" data-act="port">Abrir portafolio</button></div></div>`:""}
  ${installCard()}
- <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.11<br>Elaborado por José Alfredo González García</div>`;
+ <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.12<br>Elaborado por José Alfredo González García</div>`;
 }
 function viewPortfolio(){
  if(wantsHistory())ensureHistory();
@@ -3108,6 +3173,17 @@ document.addEventListener("click",async e=>{
   case"ack":try{await S.db.doc("records/"+v).update({ack:{by:authorName(),at:new Date().toISOString()}});closeModal();toast("Marcado como enterado")}catch(err){toast("No se pudo actualizar.")}break;
   case"del-rec":$("#delConfirm").hidden=false;break;
   case"hist":closeModal();openHist(v);break;
+  case"uf-clear":S.uf={proj:"all",q:""};render();break;
+  case"docs":push("documentos");break;
+  case"doc-open":{const[pid,did]=v.split("|");openDoc(pid,did);break}
+  case"doc-read":{S.docRead=S.docRead||{};S.docRead[v]=1;break}
+  case"doc-sign":{const[pid,did]=v.split("|");if(!(S.docRead||{})[v]){toast("Primero abre y lee el documento.");return}if(!$("#doc-ok").checked){toast("Marca la casilla de que leíste el documento.");return}const d=projDocs(S.projects[pid]).find(x=>x.id===did);openSign("Firma de enterado",fm=>saveAcuse(pid,d,fm));break}
+  case"doc-new":openDocEdit(null);break;
+  case"doc-edit":openDocEdit(v);break;
+  case"doc-adm":openDocAdm(v);break;
+  case"doc-del":{if(!confirm("¿Quitar este documento? Las firmas registradas se conservan."))return;const p=S.projects[S.dproj];const docs=(p.docs||[]).filter(x=>x.id!==v);if(await saveDocsOf(S.dproj,docs)){logBit("Quitó documento",v,S.dproj);closeModal();toast("Documento quitado")}break}
+  case"doc-csv":docCSV();break;
+  case"doc-rep":docReport();break;
   case"selfie":openSelfie(b.dataset.k);break;
   case"snap":{const vd=$("#camv");if(!vd||!vd.videoWidth){toast("La cámara aún no está lista.");return}finishSelfie(vd);break}
   case"hist-dl":b.disabled=true;await dlExpediente(v);b.disabled=false;break;
@@ -3166,6 +3242,7 @@ document.addEventListener("input",e=>{
  if(t.dataset.f&&S.form){S.form.values[t.dataset.f]=t.dataset.split?t.value.split("\n").map(s=>s.trim()).filter(Boolean):t.value;const fe=t.closest(".field.err");if(fe){fe.classList.remove("err");fe.querySelector(".err-msg")?.remove();delete S.form.errors[t.dataset.f]}}
  else if(t.dataset.vit&&S.form){const[k,c]=t.dataset.vit.split("|");const o=S.form.values[k]=S.form.values[k]||{};o[c]=t.value;const h=$("#vit_"+k);if(h)h.innerHTML=vitHint(o);const fe=t.closest(".field.err");if(fe&&o.sis&&o.dia){fe.classList.remove("err");fe.querySelector(".err-msg")?.remove()}}
  else if(t.dataset.row&&S.form){const[k,i,c]=t.dataset.row.split("|");S.form.values[k][+i][c]=t.value}
+ else if(t.dataset.inp==="uq"){S.uf.q=t.value;render();const el=$("#uf-q");if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length)}}
  else if(t.dataset.inp==="q"){S.f.q=t.value;const l=$("#recList");if(l){const rs=filtered();l.innerHTML=rs.length?rs.slice(0,250).map(itemHTML).join(""):`<div class="empty">No hay registros con estos filtros.</div>`}}
 });
 document.addEventListener("change",async e=>{
@@ -3176,10 +3253,10 @@ document.addEventListener("change",async e=>{
  if(t.dataset.logo){const f=t.files&&t.files[0];if(!f)return;syncProject();try{S.editProject.logo=await compress(f,240,1,"image/png");render()}catch(err){toast("No se pudo leer el logo.")}return}
  const c=t.dataset.chg;if(!c)return;
  if(c==="proj"){S.projectId=t.value;lsSet("ehs.project",t.value)}else if(c==="period")S.f.period=t.value;else if(c==="fproj")S.f.proj=t.value;else if(c==="ftype")S.f.type=t.value;else if(c==="forg")S.f.org=t.value;
- else if(c==="rgproj")S.rgProj=t.value;else if(c==="pwho")S.port.who=t.value;else if(c==="pfrom")S.port.from=t.value||S.port.from;else if(c==="pto")S.port.to=t.value||S.port.to;
+ else if(c==="rgproj")S.rgProj=t.value;else if(c==="ufproj")S.uf.proj=t.value;else if(c==="dproj")S.dproj=t.value;else if(c==="pwho")S.port.who=t.value;else if(c==="pfrom")S.port.from=t.value||S.port.from;else if(c==="pto")S.port.to=t.value||S.port.to;
  render();
 });
-document.addEventListener("submit",e=>{if(e.target.id==="userForm"){e.preventDefault();submitNewUser();return}if(e.target.id==="arcoForm"){e.preventDefault();submitArco();return}if(e.target.id==="recForm")saveForm(e);else if(e.target.id==="regForm")submitRegister(e);else if(e.target.id==="projForm")saveProject(e);else e.preventDefault()});
+document.addEventListener("submit",e=>{if(e.target.id==="userForm"){e.preventDefault();submitNewUser();return}if(e.target.id==="arcoForm"){e.preventDefault();submitArco();return}if(e.target.id==="docForm"){e.preventDefault();submitDoc();return}if(e.target.id==="recForm")saveForm(e);else if(e.target.id==="regForm")submitRegister(e);else if(e.target.id==="projForm")saveProject(e);else e.preventDefault()});
 window.startApp=boot;
 </script>
 
