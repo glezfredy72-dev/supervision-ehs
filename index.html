@@ -95,6 +95,7 @@ h2{font-size:19px;font-weight:700} h3{font-size:16px;font-weight:700}
 .vit{display:grid;grid-template-columns:1fr 1fr;gap:8px}.vbox{display:flex;flex-direction:column;gap:3px;font-size:12.5px;font-weight:600;color:var(--ink-2)}.vbox .u{font-size:11.5px;color:var(--ink-2);min-width:38px}
 .cam{background:#000;border-radius:10px;overflow:hidden;aspect-ratio:3/4;max-height:60vh;display:grid;place-items:center}.cam video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
 .selfie{display:flex;flex-direction:column;gap:6px}.selfie img{width:220px;border-radius:8px;border:1px solid var(--line)}
+.btn.wa{background:var(--accent);border-color:var(--accent);color:#fff}.btn.wa.done{background:var(--sunk);border-color:var(--line);color:var(--ink-2)}
 .msg{border-top:1px solid var(--line);padding-top:8px;display:flex;flex-direction:column;gap:3px}.msg.me{background:var(--accent-soft);border-radius:8px;padding:8px;border:0}
 .msgc.unread{border-color:var(--accent);box-shadow:inset 4px 0 0 var(--accent)}
 .push .pi{font-size:16px}
@@ -2596,7 +2597,7 @@ async function saveForm(e){
  if(Object.keys(F.errors).length){render();const el=$(".field.err");el&&el.scrollIntoView({behavior:"smooth",block:"center"});toast("Faltan campos obligatorios.");return}
  const values={};for(const f of fs){let v=f.t==="auto"?autoLines(f.src,F.pid):F.values[f.k];if(f.t==="number"&&v!==""&&v!=null)v=Number(v);if(f.t==="vitals"&&v){const o={};VIT.forEach(([k])=>{if(v[k]!==""&&v[k]!=null&&!isNaN(Number(v[k])))o[k]=Number(v[k])});const b=bpClass(o.sis,o.dia);if(b)o.clasif=b.t;v=Object.keys(o).length?o:undefined}if(f.t==="pct"){const a=Number(F.values.capMayor),c=Number(F.values.capCont);v=a>0&&c>=0&&F.values.capCont!==""&&F.values.capCont!=null?Math.round(c/a*100):undefined}if(v!==undefined&&v!==null&&v!==""&&!(Array.isArray(v)&&!v.length))values[f.k]=v}
  const now=new Date(),id=rid(12);
- const doc={type:m.k,projectId:F.pid,folio:`${m.code}-${String(now.getFullYear()).slice(2)}${pad(now.getMonth()+1)}${pad(now.getDate())}-${rid(3)}`,authorId:S.uid||"admin",authorName:authorName(),authorOrigen:(member()||{}).origen||"principal",authorEmpresa:(member()||{}).empresa||"",createdAt:now.toISOString(),day:localD(now),values};
+ const doc={type:m.k,projectId:F.pid,folio:`${m.code}-${String(now.getFullYear()).slice(2)}${pad(now.getMonth()+1)}${pad(now.getDate())}-${rid(3)}`,authorId:S.uid||"admin",authorName:authorName(),authorOrigen:(member()||{}).origen||"principal",authorEmpresa:(member()||{}).empresa||"",authorTel:String((member()||{}).telefono||"").replace(/\D/g,""),createdAt:now.toISOString(),day:localD(now),values};
  if(CLOSABLE.includes(m.k))doc.status="abierto";
  const btn=$("#saveBtn");btn.disabled=true;btn.textContent="Guardando…";
  if(!(await fitDoc(doc))){btn.disabled=false;btn.textContent="Guardar "+m.code;toast("El registro tiene demasiadas fotos. Quita algunas e intenta de nuevo.");return}
@@ -2825,6 +2826,9 @@ function subMsgs(db){let first=true;
  db.collection("mensajes").where("to","==",S.uid).onSnapshot(s=>{const old=new Set((S.inbox||[]).map(m=>m.id));S.inbox=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
   if(!first){const nw=S.inbox.find(m=>!old.has(m.id)&&!m.leido);if(nw)msgNote(nw)}first=false;schedule()},e=>console.warn("mensajes",e));
  db.collection("mensajes").where("from","==",S.uid).onSnapshot(s=>{S.sent=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},e=>console.warn("mensajes",e))}
+function telOf(r){const m=S.members[r.authorId];return String((m&&m.telefono)||r.authorTel||"").replace(/\D/g,"")}
+function waURL(tel,txt){const d=String(tel||"").replace(/\D/g,"");const full=d.length===10?"52"+d:d;return`https://wa.me/${full}?text=${encodeURIComponent(txt)}`}
+function appLink(){return location.href.split("#")[0]}
 function canFollow(r){if(!r||!CLOSABLE.includes(r.type)||r.pending||isSalud(r))return false;if(r.authorId===S.uid)return false;const ro=role();return S.isAdmin||ro==="lider"||(ro==="padmin"&&myPids().includes(r.projectId))}
 function unread(){return(S.inbox||[]).filter(m=>!m.leido)}
 function msgNote(m){const host=$("#pushHost");host.innerHTML=`<button class="push" data-act="msgs" role="status"><span class="pi">✉</span><span style="min-width:0"><b>Mensaje de seguimiento · ${esc(m.fromNombre||"")}</b><span class="pt" style="display:block">${esc((m.texto||"").slice(0,90))}</span><span class="pt" style="display:block">Toca para verlo.</span></span></button>`;clearTimeout(pushNote.t);pushNote.t=setTimeout(()=>host.innerHTML="",9000)}
@@ -2833,7 +2837,8 @@ function openFollow(ids){const rs=ids.map(findRec).filter(Boolean);if(!rs.length
  openModal(`<div class="sheet-head"><div><span class="ey">Seguimiento · ${rs.length} hallazgo${rs.length>1?"s":""}</span><h2>Mensaje para ${esc(r.authorName||"")}</h2></div><button class="btn sm ghost" data-act="close">Cerrar</button></div>
  <div class="field"><label for="fw-t">Mensaje</label><textarea class="inp" id="fw-t" rows="7">${esc(followText(rs))}</textarea></div>
  <div class="help">Le llega dentro de la app: lo ve en Más → Mensajes y como aviso si tiene la app abierta. También puedes mandarlo por WhatsApp o Gmail.</div>
- <div class="row"><button class="btn primary" data-act="fw-send">Enviar en la app</button>${u.telefono?`<button class="btn sm" data-act="fw-wa" data-v="${esc(String(u.telefono).replace(/\D/g,""))}">También por WhatsApp</button>`:""}${u.email?`<button class="btn sm" data-act="fw-gm" data-v="${esc(u.email)}">También por Gmail</button>`:""}</div>`)}
+ <div class="row"><button class="btn primary" data-act="fw-send">Enviar en la app</button><button class="btn sm wa" data-act="fw-wa" data-v="${esc(telOf(r))}">${telOf(r)?"Enviar por WhatsApp":"WhatsApp (elegir contacto)"}</button>${u.email?`<button class="btn sm" data-act="fw-gm" data-v="${esc(u.email)}">Gmail</button>`:""}</div>
+ <div class="help">${telOf(r)?`WhatsApp abre el chat con ${esc(r.authorName||"")} (${esc(telOf(r))}) con el mensaje listo.`:`No hay celular registrado de ${esc(r.authorName||"")}: WhatsApp te pedirá elegir el contacto.`} El mensaje incluye el enlace de la app.</div>`)}
 async function sendFollow(){const ids=S.follow||[],rs=ids.map(findRec).filter(Boolean),txt=$("#fw-t").value.trim();if(!txt){toast("Escribe el mensaje.");return}const r=rs[0],m=member()||{};
  const d={to:r.authorId,toNombre:r.authorName||"",from:S.uid,fromNombre:authorName(),fromRol:ROLE_L[role()]||"",pid:r.projectId,recIds:ids,folios:rs.map(x=>x.folio),texto:txt,tipo:"seguimiento",leido:false,at:new Date().toISOString()};
  try{await S.db.collection("mensajes").doc(Date.now().toString(36)+rid(4)).set(d);logBit("Envió seguimiento",`${d.folios.join(", ")} a ${d.toNombre}`,r.projectId);closeModal();toast("Mensaje enviado")}catch(e){toast("No se pudo enviar. Revisa tu conexión o las reglas de Firestore.")}}
@@ -3170,7 +3175,7 @@ function viewMas(){
  ${(S.myArco||[]).map(a=>`<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:8px"><span class="small"><b>${esc(a.tipo)}</b> · ${fmtD(a.at)}<br><span class="muted">${esc(a.respuesta||"Sin respuesta todavía")}</span></span><span class="pill ${arcoCls(a)}">${esc(a.estado||"Recibida")}</span></div>`).join("")}</div>
  ${r!=="visor"?`<div class="card"><h3>Portafolio de evidencias EC0680</h3><div class="muted small">Tus formatos agrupados por elemento del estándar.</div><div><button class="btn sm primary" data-act="port">Abrir portafolio</button></div></div>`:""}
  ${installCard()}
- <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.13<br>Elaborado por José Alfredo González García</div>`;
+ <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.14<br>Elaborado por José Alfredo González García</div>`;
 }
 function viewPortfolio(){
  if(wantsHistory())ensureHistory();
@@ -3232,9 +3237,13 @@ document.addEventListener("click",async e=>{
   case"follow":openFollow([v]);break;
   case"follow-all":{const by={};filtered().filter(r=>isOpen(r)&&canFollow(r)).forEach(r=>(by[r.authorId]=by[r.authorId]||[]).push(r.id));const ks=Object.keys(by);if(!ks.length)return;if(!confirm(`Se enviará un mensaje a ${ks.length} persona${ks.length>1?"s":""} con sus hallazgos abiertos. ¿Continuar?`))return;let n=0;
    for(const k of ks){const rs=by[k].map(findRec),r=rs[0];const d={to:k,toNombre:r.authorName||"",from:S.uid,fromNombre:authorName(),fromRol:ROLE_L[role()]||"",pid:r.projectId,recIds:by[k],folios:rs.map(x=>x.folio),texto:followText(rs),tipo:"seguimiento",leido:false,at:new Date().toISOString()};try{await S.db.collection("mensajes").doc(Date.now().toString(36)+rid(4)).set(d);n++}catch(e){}}
-   logBit("Envió seguimiento masivo",`${n} personas`);toast(`Mensajes enviados a ${n} persona${n>1?"s":""}`);break}
+   logBit("Envió seguimiento masivo",`${n} personas`);toast(`Mensajes enviados a ${n} persona${n>1?"s":""}`);
+   openModal(`<div class="sheet-head"><div><span class="ey">Seguimiento enviado en la app a ${n} persona${n>1?"s":""}</span><h2>Enviar también por WhatsApp</h2></div><button class="btn sm ghost" data-act="close">Listo</button></div>
+   <div class="help">WhatsApp no permite envíos masivos desde una app: toca cada botón, envía y regresa por el siguiente.</div>
+   <div class="list">${ks.map(k=>{const rs=by[k].map(findRec),r=rs[0],tel=telOf(r);return`<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:8px;flex-wrap:nowrap"><span class="small"><b>${esc(r.authorName||"")}</b><br><span class="muted">${rs.length} hallazgo${rs.length>1?"s":""} abierto${rs.length>1?"s":""}${tel?" · "+esc(tel):" · sin celular"}</span></span><a class="btn sm wa" href="${tel?waURL(tel,followText(rs)+"\n\nAbre la app: "+appLink()):"https://wa.me/?text="+encodeURIComponent(followText(rs)+"\n\nAbre la app: "+appLink())}" target="_blank" rel="noopener" data-act="wa-done">WhatsApp</a></span></div>`}).join("")}</div>`);break}
   case"fw-send":sendFollow();break;
-  case"fw-wa":{const d=v.length===10?"52"+v:v;window.open(`https://wa.me/${d}?text=${encodeURIComponent($("#fw-t").value)}`,"_blank","noopener");break}
+  case"wa-done":b.classList.add("done");b.textContent="Enviado ✓";break;
+  case"fw-wa":{const t=$("#fw-t").value+"\n\nAbre la app: "+appLink();window.open(v?waURL(v,t):`https://wa.me/?text=${encodeURIComponent(t)}`,"_blank","noopener");const ids=S.follow||[];const r=findRec(ids[0]);if(r)logBit("Envió seguimiento por WhatsApp",`${ids.map(i=>(findRec(i)||{}).folio).join(", ")} a ${r.authorName}`,r.projectId);break}
   case"fw-gm":window.open(gmailURL(v,"Seguimiento a hallazgos abiertos",$("#fw-t").value),"_blank","noopener");break;
   case"msgs":$("#pushHost").innerHTML="";push("mensajes");break;
   case"msg-read":markRead(v);render();break;
