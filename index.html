@@ -95,6 +95,9 @@ h2{font-size:19px;font-weight:700} h3{font-size:16px;font-weight:700}
 .vit{display:grid;grid-template-columns:1fr 1fr;gap:8px}.vbox{display:flex;flex-direction:column;gap:3px;font-size:12.5px;font-weight:600;color:var(--ink-2)}.vbox .u{font-size:11.5px;color:var(--ink-2);min-width:38px}
 .cam{background:#000;border-radius:10px;overflow:hidden;aspect-ratio:3/4;max-height:60vh;display:grid;place-items:center}.cam video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
 .selfie{display:flex;flex-direction:column;gap:6px}.selfie img{width:220px;border-radius:8px;border:1px solid var(--line)}
+.msg{border-top:1px solid var(--line);padding-top:8px;display:flex;flex-direction:column;gap:3px}.msg.me{background:var(--accent-soft);border-radius:8px;padding:8px;border:0}
+.msgc.unread{border-color:var(--accent);box-shadow:inset 4px 0 0 var(--accent)}
+.push .pi{font-size:16px}
 .rect summary{cursor:pointer;font-weight:700;font-size:13.5px;color:var(--accent);margin-top:6px}
 .consent{font-size:13px;line-height:1.5;background:var(--sunk);border-radius:8px;padding:10px 12px}
 .sos.amb{background:#8A5A12}.perf{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);margin-top:4px}
@@ -2271,6 +2274,7 @@ async function boot(){
   db.collection("members").onSnapshot(s=>{S.members={};s.docs.forEach(d=>S.members[d.id]={id:d.id,...d.data()});S.loaded.m=1;syncSoon();schedule()},err);
   db.collection("requests").onSnapshot(s=>{S.requests={};s.docs.forEach(d=>S.requests[d.id]={id:d.id,...d.data()});S.loaded.q=1;schedule()},err);
   db.collection("consents").onSnapshot(s=>{S.consents={};s.docs.forEach(d=>addCons(S.consents,d.data(),1));S.loaded.c=1;schedule()},e=>{console.warn(e);S.loaded.c=1;schedule()});
+  subMsgs(db);
   db.collection("acuses").onSnapshot(s=>{S.acuses=s.docs.map(d=>d.data());schedule()},e=>console.warn("acuses",e));
   db.collection("arco").onSnapshot(s=>{S.arco=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},e=>console.warn("arco",e));
   db.collection("pub").onSnapshot(s=>{S.pub={};s.docs.forEach(d=>S.pub[d.id]=d.data());S.pubLoaded=1;syncSoon()},e=>console.warn(e));
@@ -2300,6 +2304,7 @@ async function boot(){
   db.doc("members/"+S.uid).onSnapshot(d=>{if(d.exists)S.members[S.uid]={id:S.uid,...d.data()};else delete S.members[S.uid];S.loaded.m=1;subRecords();subTeam();subCons();subHealth();S.subAcuses&&S.subAcuses();schedule()},()=>{delete S.members[S.uid];S.loaded.m=1;subRecords();subTeam();schedule()});
   db.doc("requests/"+S.uid).onSnapshot(d=>{S.reqOwn=d.exists?{id:S.uid,...d.data()}:null;mergeReqs();S.loaded.q=1;schedule()},()=>{S.reqOwn=null;mergeReqs();S.loaded.q=1;schedule()});
   // Aceptaciones del aviso de privacidad: las propias y, para el administrador de proyecto, las de su equipo.
+  subMsgs(db);
   db.collection("acuses").where("uid","==",S.uid).onSnapshot(s=>{S.myAcuses=s.docs.map(d=>d.data());schedule()},e=>console.warn("acuses",e));
   db.collection("arco").where("by","==",S.uid).onSnapshot(s=>{S.myArco=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.at).localeCompare(String(a.at)));schedule()},e=>console.warn("arco",e));
   db.collection("consents").where("uid","==",S.uid).onSnapshot(s=>{S.myCons={};s.docs.forEach(d=>addCons(S.myCons,d.data()));S.loaded.c=1;schedule()},e=>{console.warn(e);S.loaded.c=1;schedule()});
@@ -2383,8 +2388,8 @@ const ICONS={
  more:'<circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/>'
 };
 const svg=n=>`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
-const SUBS=["form","proyecto","portafolio","usuario","registro","documentos"];
-const TITLES={dashboard:"Tablero",campo:"Campo",registros:"Registros",admin:"Administrar",mas:"Más",proyecto:"Proyecto",portafolio:"Portafolio EC0680",documentos:"Documentos del proyecto",usuario:"Usuario",registro:"Solicitar acceso"};
+const SUBS=["form","proyecto","portafolio","usuario","registro","documentos","mensajes"];
+const TITLES={dashboard:"Tablero",campo:"Campo",registros:"Registros",admin:"Administrar",mas:"Más",proyecto:"Proyecto",portafolio:"Portafolio EC0680",documentos:"Documentos del proyecto",mensajes:"Mensajes",usuario:"Usuario",registro:"Solicitar acceso"};
 function go(tab){S.stack=[];S.tab=tab;S.sel=null;S.form=null;S.editProject=null;render(true)}
 function push(tab){S.stack.push(S.tab);S.tab=tab;render(true)}
 function back(){S.form=null;S.editProject=null;S.tab=S.stack.pop()||(role()?TABS[role()][0][0]:null);render(true)}
@@ -2400,7 +2405,7 @@ function renderChrome(){
  const pend=(r==="admin"||r==="padmin")?pendingRequests().length:0;
  const unack=r!=="supervisor"?visible().filter(x=>x.type==="accidente"&&!x.ack&&!x.pending).length:0;
  const cur=sub?(S.stack[0]||S.tab):S.tab;
- tb.innerHTML=TABS[r].map(([k,l,ic])=>{const b=k==="admin"?pend:k==="dashboard"?unack:k==="mas"?S.outbox.length+docsPending().length:0;return`<button data-act="tab" data-v="${k}" ${cur===k?'aria-current="page"':""}><span class="tic">${svg(ic)}</span>${l}${b?`<span class="tbadge">${b}</span>`:""}</button>`}).join("");
+ tb.innerHTML=TABS[r].map(([k,l,ic])=>{const b=k==="admin"?pend:k==="dashboard"?unack:k==="mas"?S.outbox.length+docsPending().length+unread().length:0;return`<button data-act="tab" data-v="${k}" ${cur===k?'aria-current="page"':""}><span class="tic">${svg(ic)}</span>${l}${b?`<span class="tbadge">${b}</span>`:""}</button>`}).join("");
 }
 function render(top){
  const app=$("#app");
@@ -2415,7 +2420,7 @@ function render(top){
  const valid=TABS[r].map(x=>x[0]).concat(SUBS);
  if(!S.tab||!valid.includes(S.tab)||(S.tab==="form"&&!S.form)||(S.tab==="proyecto"&&!S.editProject))S.tab=TABS[r][0][0];
  renderChrome();
- const v={dashboard:viewDashboard,campo:viewCampo,registros:viewRecords,admin:viewAdmin,mas:viewMas,form:viewForm,proyecto:viewProjectEdit,portafolio:viewPortfolio,usuario:viewApprove,documentos:viewDocs}[S.tab];
+ const v={dashboard:viewDashboard,campo:viewCampo,registros:viewRecords,admin:viewAdmin,mas:viewMas,form:viewForm,proyecto:viewProjectEdit,portafolio:viewPortfolio,usuario:viewApprove,documentos:viewDocs,mensajes:viewMsgs}[S.tab];
  const sc=$("#scroll"),y=sc.scrollTop;
  app.innerHTML=v();
  sc.scrollTop=top?0:y;
@@ -2485,8 +2490,9 @@ function viewCampo(){
  const done=new Set(mine.filter(r=>r.day===today).map(r=>r.type));
  const steps=pf.includes("seguridad")?DAY_STEPS.filter(k=>mods.some(m=>m.k===k)):[];
  const open=allRecords().filter(r=>r.projectId===p.id&&isOpen(r)&&(seesAll()||r.authorId===S.uid)).slice(0,5);
- const dp=docsPending();
+ const dp=docsPending(),un=unread();
  return`${syncBanner()}
+ ${un.length?`<button class="notice" data-act="msgs" style="text-align:left;border:0;cursor:pointer;width:100%"><b>✉ ${un.length} mensaje${un.length>1?"s":""} de seguimiento sin leer</b><br><span class="small">${esc(un[0].fromNombre)}: ${esc((un[0].texto||"").slice(0,70))}…</span></button>`:""}
  ${dp.length?`<button class="notice warn" data-act="docs" style="text-align:left;border:0;cursor:pointer;width:100%"><b>${dp.length} documento${dp.length>1?"s":""} por firmar de enterado</b><br><span class="small">${esc(dp.slice(0,3).map(x=>x.d.titulo).join(" · "))}</span></button>`:""}
  <div class="proj"><div class="logo">${p.logo?`<img src="${esc(p.logo)}" alt="">`:esc((p.nombre||"?").slice(0,2).toUpperCase())}</div><div style="min-width:0;flex:1"><h2>${esc(p.nombre)}</h2><div class="muted small">${esc(p.cliente||"")}</div></div></div>
  ${ps.length>1?`<select class="inp" data-chg="proj" aria-label="Proyecto activo">${ps.map(x=>`<option value="${esc(x.id)}" ${x.id===p.id?"selected":""}>${esc(x.nombre)}</option>`).join("")}</select>`:""}
@@ -2668,7 +2674,7 @@ function viewRecords(){
   <select class="inp" data-chg="period" aria-label="Periodo">${PERIODS.map(([v,l])=>`<option value="${v}" ${f.period===v?"selected":""}>${l}</option>`).join("")}</select></div>
  ${role()!=="supervisor"?`<select class="inp" data-chg="forg" aria-label="Personal"><option value="all">Todo el personal</option>${Object.entries(ORG).map(([k,l])=>`<option value="${k}" ${f.org===k?"selected":""}>${l}</option>`).join("")}</select>`:""}
  ${f.status!=="all"?`<div class="row"><span class="pill accent">${esc({abierto:"Hallazgos abiertos",alto:"Abiertos riesgo alto",cerrado:"Cerrados",lesion:"Accidentes con lesión",casi:"Casi accidentes"}[f.status])}</span><button class="btn sm ghost" data-act="clearf">Quitar filtros</button></div>`:""}
- <div class="row"><span class="muted small">${rs.length} registro${rs.length===1?"":"s"}${S.histState==="loading"?" · cargando anteriores…":""}</span><span class="spacer"></span>${S.isAdmin&&!S.sel&&rs.length?`<button class="btn sm" data-act="sel-on">Seleccionar</button>`:""}${role()!=="supervisor"&&S.dl?`<button class="btn sm" data-act="csv">Exportar a Excel (CSV)</button>`:""}${healthPids().length&&S.dl?`<button class="btn sm" data-act="csv-salud">🔒 Exportar salud</button>`:""}</div>
+ <div class="row"><span class="muted small">${rs.length} registro${rs.length===1?"":"s"}${S.histState==="loading"?" · cargando anteriores…":""}</span><span class="spacer"></span>${S.isAdmin&&!S.sel&&rs.length?`<button class="btn sm" data-act="sel-on">Seleccionar</button>`:""}${f.status==="abierto"&&(S.isAdmin||role()==="lider"||role()==="padmin")&&rs.some(canFollow)?`<button class="btn sm" data-act="follow-all">✉ Seguimiento a todos</button>`:""}${role()!=="supervisor"&&S.dl?`<button class="btn sm" data-act="csv">Exportar a Excel (CSV)</button>`:""}${healthPids().length&&S.dl?`<button class="btn sm" data-act="csv-salud">🔒 Exportar salud</button>`:""}</div>
  ${S.sel?selBar(rs):""}
  <div class="list" id="recList">${rs.length?rs.slice(0,250).map(itemHTML).join(""):`<div class="empty">No hay registros con estos filtros.</div>`}</div>`;
 }
@@ -2717,7 +2723,8 @@ function openRecord(id,again){
  ${fieldsFor(m,p).map(f=>{const x=v[f.k];if(x==null||x===""||(Array.isArray(x)&&!x.length))return"";return`<dt>${esc(f.label)}</dt><dd>${valueHTML(f,x)}</dd>`}).join("")}
  ${r.status==="cerrado"?`<dt>Cierre</dt><dd>${fmtDT(r.closedAt)} · ${esc(r.closedBy||"")}\n${esc(r.closeNote||"")}</dd>`:""}${r.ack?`<dt>Enterado</dt><dd>${fmtDT(r.ack.at)} · ${esc(r.ack.by)}</dd>`:""}</dl></div>
  ${canClose?`<div class="card"><div class="field"><label for="cl-note">Cerrar ${r.type==="hallazgoamb"?"hallazgo ambiental":"hallazgo"}: acción implementada</label><textarea class="inp" id="cl-note" placeholder="Describe qué se hizo para corregirlo"></textarea></div><div><button class="btn primary sm" data-act="close-h" data-v="${esc(r.id)}">Cerrar hallazgo</button></div></div>`:""}
- <div class="row">${!r.pending?`<button class="btn sm" data-act="pdf" data-v="${esc(r.id)}">Ver reporte</button>`:""}${isSalud(r)&&v.empleado&&!r.pending?`<button class="btn sm" data-act="hist" data-v="${esc(r.id)}">Historial del colaborador</button>`:""}${(r.type==="accidente"||r.type==="incamb"||(CLOSABLE.includes(r.type)&&v.riesgo==="Alto"))?`<button class="btn sm" data-act="notify" data-v="${esc(r.id)}">Enviar aviso</button>`:""}${canManage(r.projectId)&&r.type==="accidente"&&!r.ack&&!r.pending?`<button class="btn sm primary" data-act="ack" data-v="${esc(r.id)}">Marcar como enterado</button>`:""}<span class="spacer"></span>${canDel?`<button class="btn sm ghost" data-act="del-rec">Eliminar</button>`:""}</div>
+ ${msgThread(r)}
+ <div class="row">${canFollow(r)&&isOpen(r)?`<button class="btn sm primary" data-act="follow" data-v="${esc(r.id)}">✉ Pedir seguimiento</button>`:""}${!r.pending?`<button class="btn sm" data-act="pdf" data-v="${esc(r.id)}">Ver reporte</button>`:""}${isSalud(r)&&v.empleado&&!r.pending?`<button class="btn sm" data-act="hist" data-v="${esc(r.id)}">Historial del colaborador</button>`:""}${(r.type==="accidente"||r.type==="incamb"||(CLOSABLE.includes(r.type)&&v.riesgo==="Alto"))?`<button class="btn sm" data-act="notify" data-v="${esc(r.id)}">Enviar aviso</button>`:""}${canManage(r.projectId)&&r.type==="accidente"&&!r.ack&&!r.pending?`<button class="btn sm primary" data-act="ack" data-v="${esc(r.id)}">Marcar como enterado</button>`:""}<span class="spacer"></span>${canDel?`<button class="btn sm ghost" data-act="del-rec">Eliminar</button>`:""}</div>
  <div id="delConfirm" hidden class="notice bad"><div>¿Eliminar ${esc(r.folio)}? No se puede deshacer.</div><div class="row" style="margin-top:8px"><button class="btn sm" data-act="del-no">No</button><button class="btn sm danger" data-act="del-yes" data-v="${esc(r.id)}">Eliminar</button></div></div>`);
 }
 
@@ -2812,6 +2819,52 @@ function csvSalud(){const rs=filtered().filter(isSalud);const q=s=>'"'+String(s?
  const rows=rs.map(r=>{const v=r.values||{},vt=v.vitales||{};return[r.folio,MOD[r.type].name,projName(r.projectId),fmtDT(r.createdAt),v.colaborador,v.empleado,v.empresa,v.motivo||v.trabajo||v.lesion||"",vt.sis,vt.dia,vt.fc,vt.spo2,vt.temp,vt.gluc,vt.clasif,v.conducta||v.resultado||v.destino||"",r.authorName].map(q).join(",")});
  logBit("Exportó datos de salud (CSV)",rs.length+" registros");
  save(`salud-confidencial-${localD()}.csv`,"﻿"+cols.map(q).join(",")+"\n"+rows.join("\n"))}
+
+/* ===================== Mensajes de seguimiento (hallazgos abiertos) ===================== */
+function subMsgs(db){let first=true;
+ db.collection("mensajes").where("to","==",S.uid).onSnapshot(s=>{const old=new Set((S.inbox||[]).map(m=>m.id));S.inbox=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+  if(!first){const nw=S.inbox.find(m=>!old.has(m.id)&&!m.leido);if(nw)msgNote(nw)}first=false;schedule()},e=>console.warn("mensajes",e));
+ db.collection("mensajes").where("from","==",S.uid).onSnapshot(s=>{S.sent=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},e=>console.warn("mensajes",e))}
+function canFollow(r){if(!r||!CLOSABLE.includes(r.type)||r.pending||isSalud(r))return false;if(r.authorId===S.uid)return false;const ro=role();return S.isAdmin||ro==="lider"||(ro==="padmin"&&myPids().includes(r.projectId))}
+function unread(){return(S.inbox||[]).filter(m=>!m.leido)}
+function msgNote(m){const host=$("#pushHost");host.innerHTML=`<button class="push" data-act="msgs" role="status"><span class="pi">✉</span><span style="min-width:0"><b>Mensaje de seguimiento · ${esc(m.fromNombre||"")}</b><span class="pt" style="display:block">${esc((m.texto||"").slice(0,90))}</span><span class="pt" style="display:block">Toca para verlo.</span></span></button>`;clearTimeout(pushNote.t);pushNote.t=setTimeout(()=>host.innerHTML="",9000)}
+function followText(rs){const one=rs.length===1,r=rs[0],v=r.values||{};return one?`Hola ${(r.authorName||"").split(" ")[0]}: el hallazgo ${r.folio} (${recTitle(r).slice(0,80)}) sigue abierto${v.compromiso?` y su fecha compromiso es el ${fmtD(v.compromiso)}`:""}. ¿Nos compartes el avance o lo cierras en la app con la acción implementada? Gracias.`:`Hola ${(r.authorName||"").split(" ")[0]}: tienes ${rs.length} hallazgos abiertos por cerrar:\n${rs.slice(0,15).map(x=>`• ${x.folio} · ${recTitle(x).slice(0,60)}${x.values&&x.values.compromiso?` · compromiso ${fmtD(x.values.compromiso)}`:""}`).join("\n")}\n¿Nos compartes el avance o los cierras en la app con la acción implementada? Gracias.`}
+function openFollow(ids){const rs=ids.map(findRec).filter(Boolean);if(!rs.length)return;const r=rs[0],u=S.members[r.authorId]||{};S.follow=ids;
+ openModal(`<div class="sheet-head"><div><span class="ey">Seguimiento · ${rs.length} hallazgo${rs.length>1?"s":""}</span><h2>Mensaje para ${esc(r.authorName||"")}</h2></div><button class="btn sm ghost" data-act="close">Cerrar</button></div>
+ <div class="field"><label for="fw-t">Mensaje</label><textarea class="inp" id="fw-t" rows="7">${esc(followText(rs))}</textarea></div>
+ <div class="help">Le llega dentro de la app: lo ve en Más → Mensajes y como aviso si tiene la app abierta. También puedes mandarlo por WhatsApp o Gmail.</div>
+ <div class="row"><button class="btn primary" data-act="fw-send">Enviar en la app</button>${u.telefono?`<button class="btn sm" data-act="fw-wa" data-v="${esc(String(u.telefono).replace(/\D/g,""))}">También por WhatsApp</button>`:""}${u.email?`<button class="btn sm" data-act="fw-gm" data-v="${esc(u.email)}">También por Gmail</button>`:""}</div>`)}
+async function sendFollow(){const ids=S.follow||[],rs=ids.map(findRec).filter(Boolean),txt=$("#fw-t").value.trim();if(!txt){toast("Escribe el mensaje.");return}const r=rs[0],m=member()||{};
+ const d={to:r.authorId,toNombre:r.authorName||"",from:S.uid,fromNombre:authorName(),fromRol:ROLE_L[role()]||"",pid:r.projectId,recIds:ids,folios:rs.map(x=>x.folio),texto:txt,tipo:"seguimiento",leido:false,at:new Date().toISOString()};
+ try{await S.db.collection("mensajes").doc(Date.now().toString(36)+rid(4)).set(d);logBit("Envió seguimiento",`${d.folios.join(", ")} a ${d.toNombre}`,r.projectId);closeModal();toast("Mensaje enviado")}catch(e){toast("No se pudo enviar. Revisa tu conexión o las reglas de Firestore.")}}
+function msgThread(r){const all=(S.inbox||[]).concat(S.sent||[]).filter(m=>(m.recIds||[]).includes(r.id)).sort((a,b)=>String(a.at).localeCompare(String(b.at)));
+ return all.length?`<div class="card"><h3>Seguimiento</h3>${all.map(m=>`<div class="msg ${m.from===S.uid?"me":""}"><div class="small muted">${esc(m.fromNombre)} → ${esc(m.toNombre||"")} · ${fmtDT(m.at)}${m.from===S.uid?` · ${m.leido?"Leído "+fmtD(m.leidoAt):"Sin leer"}`:""}</div><div style="white-space:pre-wrap">${esc(m.texto)}</div></div>`).join("")}</div>`:""}
+function viewMsgs(){const L=S.inbox||[];
+ return`<div class="muted small">Mensajes de seguimiento de tus administradores y supervisores líderes.</div>${L.length?`<div class="list">${L.map(m=>`<div class="card msgc ${m.leido?"":"unread"}"><div class="row" style="justify-content:space-between"><b>${esc(m.fromNombre)}</b><span class="muted small">${fmtDT(m.at)}</span></div><div class="small muted">${esc(m.fromRol||"")} · ${esc(projName(m.pid))}</div><div style="white-space:pre-wrap">${esc(m.texto)}</div>
+ <div class="row">${(m.recIds||[]).filter(id=>findRec(id)).slice(0,6).map((id,i)=>`<button class="btn sm" data-act="msg-rec" data-v="${esc(m.id)}|${esc(id)}">${esc((m.folios||[])[i]||"Ver")}</button>`).join("")}${m.leido?"":`<button class="btn sm ghost" data-act="msg-read" data-v="${esc(m.id)}">Marcar como leído</button>`}<button class="btn sm ghost" data-act="msg-reply" data-v="${esc(m.id)}">Responder</button></div></div>`).join("")}</div>`:`<div class="empty">No tienes mensajes.</div>`}`}
+function markRead(id){const m=(S.inbox||[]).find(x=>x.id===id);if(!m||m.leido)return;m.leido=true;m.leidoAt=new Date().toISOString();S.db.doc("mensajes/"+id).update({leido:true,leidoAt:m.leidoAt}).catch(e=>console.warn(e))}
+function openReply(id){const m=(S.inbox||[]).find(x=>x.id===id);if(!m)return;S.replyTo=m;openModal(`<div class="sheet-head"><h2>Responder a ${esc(m.fromNombre)}</h2><button class="btn sm ghost" data-act="close">Cerrar</button></div><div class="field"><label for="rp-t">Respuesta</label><textarea class="inp" id="rp-t" rows="5" placeholder="Ej. Ya se colocó la guarda; lo cierro hoy con la evidencia."></textarea></div><button class="btn primary" data-act="rp-send">Enviar</button>`)}
+async function sendReply(){const m=S.replyTo,txt=$("#rp-t").value.trim();if(!txt){toast("Escribe la respuesta.");return}
+ const d={to:m.from,toNombre:m.fromNombre||"",from:S.uid,fromNombre:authorName(),fromRol:ROLE_L[role()]||"",pid:m.pid,recIds:m.recIds||[],folios:m.folios||[],texto:txt,tipo:"respuesta",leido:false,at:new Date().toISOString()};
+ try{await S.db.collection("mensajes").doc(Date.now().toString(36)+rid(4)).set(d);markRead(m.id);closeModal();toast("Respuesta enviada");render()}catch(e){toast("No se pudo enviar.")}}
+
+/* ===================== Documentos personales en el perfil (CV, constancias DC-3, certificados) ===================== */
+const PDOC_T=["Currículum (CV)","Constancia de habilidades DC-3","Certificado o diploma","Certificación EC (CONOCER)","Licencia de conducir","Credencial o gafete","Carta de antecedentes o responsiva","Otro"];
+function docState(d){if(!d.vigencia)return{cls:"",t:"Sin vigencia"};const days=Math.floor((new Date(d.vigencia+"T23:59")-Date.now())/864e5);return days<0?{cls:"red",t:"Vencido "+fmtD(d.vigencia)}:days<=30?{cls:"amber",t:"Vence "+fmtD(d.vigencia)}:{cls:"green",t:"Vigente al "+fmtD(d.vigencia)}}
+function docsAlert(m){return((m&&m.docs)||[]).filter(d=>{const st=docState(d);return st.cls==="red"||st.cls==="amber"}).length}
+function pdocList(uid,canEd){const m=S.members[uid]||{},L=(m.docs||[]).slice().sort((a,b)=>String(a.tipo).localeCompare(String(b.tipo)));
+ return`${L.length?`<div class="list">${L.map(d=>{const st=docState(d);return`<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:8px;flex-wrap:nowrap"><span class="small" style="min-width:0"><b>${esc(d.titulo||d.tipo)}</b><br><span class="muted">${esc(d.tipo)}${d.by?" · cargó "+esc(d.by):""}</span><br><span class="pill ${st.cls}">${esc(st.t)}</span></span><span class="row" style="flex:none;gap:4px"><a class="btn sm" href="${esc(d.url)}" target="_blank" rel="noopener">Abrir ↗</a>${canEd?`<button class="btn sm ghost" data-act="pdoc-del" data-v="${esc(uid)}|${esc(d.id)}" aria-label="Quitar">×</button>`:""}</span></div>`}).join("")}</div>`:`<div class="muted small">Sin documentos cargados.</div>`}
+ ${canEd?`<div><button class="btn sm" data-act="pdoc-new" data-v="${esc(uid)}">+ Agregar documento</button></div>`:""}`}
+function openPdoc(uid){S.pdocUid=uid;openModal(`<div class="sheet-head"><h2>Agregar documento</h2><button class="btn sm ghost" data-act="close">Cerrar</button></div><form class="form" id="pdocForm" novalidate>
+ <div class="field"><label for="pd-y">Tipo</label><select class="inp" id="pd-y">${PDOC_T.map(x=>`<option>${x}</option>`).join("")}</select></div>
+ <div class="field"><label for="pd-t">Nombre del documento</label><input class="inp" id="pd-t" placeholder="Ej. DC-3 Trabajos en altura"></div>
+ <div class="field"><label for="pd-u">Enlace <span class="req">*</span></label><input class="inp" id="pd-u" type="url" inputmode="url" placeholder="https://drive.google.com/…"><div class="help">Sube el archivo a Drive o OneDrive y compártelo como "cualquier persona con el enlace puede ver".</div></div>
+ <div class="field"><label for="pd-v">Vigencia (si aplica)</label><input class="inp" id="pd-v" type="date"></div>
+ <div class="help">No subas documentos con datos de salud (exámenes médicos, diagnósticos).</div>
+ <button class="btn primary" type="submit">Guardar</button></form>`)}
+async function submitPdoc(){const uid=S.pdocUid,m=S.members[uid];if(!m){toast("Usuario no encontrado.");return}const u=$("#pd-u").value.trim();if(!/^https:\/\/\S+$/i.test(u)){toast("El enlace debe empezar con https://");return}
+ const d={id:rid(8),tipo:$("#pd-y").value,titulo:$("#pd-t").value.trim()||$("#pd-y").value,url:u,vigencia:$("#pd-v").value||"",by:authorName(),at:new Date().toISOString()};
+ const docs=(m.docs||[]).concat(d);try{await S.db.doc("members/"+uid).update({docs});m.docs=docs;logBit("Cargó documento de perfil",`${d.titulo} · ${m.nombre}`);closeModal();render();toast("Documento guardado")}catch(e){toast("No se pudo guardar. Revisa las reglas de Firestore.")}}
 
 /* ===================== Documentos del proyecto (políticas, procedimientos) con firma de enterado ===================== */
 const DOC_T=["Política","Procedimiento","Instructivo","Reglamento","Plan de emergencia","Programa","Formato","Otro"];
@@ -2991,7 +3044,7 @@ function viewAdmin(){
  <input class="inp" type="search" id="uf-q" data-inp="uq" placeholder="Buscar por nombre, correo o empresa" value="${esc(uf.q)}">
  ${uf.proj!=="all"||uq?`<div class="row"><span class="muted small">${mem.length} de ${allMem} usuarios${reqs.length?` · ${reqs.length} solicitud${reqs.length>1?"es":""}`:""}</span><span class="spacer"></span><button class="btn sm ghost" data-act="uf-clear">Quitar filtro</button></div>`:""}</div>
  <section class="section"><h2>Solicitudes pendientes</h2>${reqs.length?`<div class="list">${reqs.map(q=>`<button class="item" data-act="req" data-v="${esc(q.id)}"><span class="item-main"><span class="item-t">${esc(q.nombre)}</span><span class="item-m">${esc(q.email)} · ${esc(q.empresa)}</span><span class="item-m">Pide: ${ROLE_L[q.rol]||"Supervisor"} · ${esc((PERF[q.perfil]||PERF.seguridad).split(" (")[0])} · ${esc(ORG[q.origen]||ORG.principal)} · ${esc(projName(q.projectId))} · ${fmtDT(q.createdAt)}</span></span><span class="btn sm primary">Revisar</span></button>`).join("")}</div>`:`<div class="empty">No hay solicitudes pendientes.</div>`}</section>
- <section class="section"><h2>Usuarios</h2>${mem.length?`<div class="list">${mem.map(m=>`<button class="item" data-act="req" data-v="${esc(m.id)}"><span class="item-main"><span class="item-t">${esc(m.nombre)}</span><span class="item-m">${esc(m.email||"")}</span><span class="item-m">${esc(orgLabel(m.origen||"principal",m.empresa))}</span><span class="item-m">${esc((m.projects||[]).map(projName).join(", "))||"Sin proyectos"}</span><span class="item-m">Perfiles: ${esc(perfilesOf(m).map(k=>PERF[k].split(" (")[0]).join(", "))}</span></span><span class="pill ${m.rejected?"":!m.active?"red":m.role==="padmin"?"solid":m.role==="lider"?"accent":m.role==="visor"?"":"blue"}">${m.rejected?"Rechazado":!m.active?"Suspendido":ROLE_L[m.role]||"Supervisor"}</span></button>`).join("")}</div>`:`<div class="empty">Aún no hay usuarios aprobados.</div>`}</section>`
+ <section class="section"><h2>Usuarios</h2>${mem.length?`<div class="list">${mem.map(m=>`<button class="item" data-act="req" data-v="${esc(m.id)}"><span class="item-main"><span class="item-t">${esc(m.nombre)}</span><span class="item-m">${esc(m.email||"")}</span><span class="item-m">${esc(orgLabel(m.origen||"principal",m.empresa))}</span><span class="item-m">${esc((m.projects||[]).map(projName).join(", "))||"Sin proyectos"}</span><span class="item-m">Perfiles: ${esc(perfilesOf(m).map(k=>PERF[k].split(" (")[0]).join(", "))}${(m.docs||[]).length?` · ${m.docs.length} doc.`:""}${docsAlert(m)?` · <b style="color:var(--amber)">${docsAlert(m)} por vencer o vencidos</b>`:""}</span></span><span class="pill ${m.rejected?"":!m.active?"red":m.role==="padmin"?"solid":m.role==="lider"?"accent":m.role==="visor"?"":"blue"}">${m.rejected?"Rechazado":!m.active?"Suspendido":ROLE_L[m.role]||"Supervisor"}</span></button>`).join("")}</div>`:`<div class="empty">Aún no hay usuarios aprobados.</div>`}</section>`
  :`<section class="section"><div class="shead"><h2>${pa?"Tus proyectos":"Proyectos"}</h2>${pa?"":`<button class="btn sm primary" data-act="proj-edit" data-v="">Nuevo proyecto</button>`}</div>
  ${ex&&!pa?`<div class="notice warn"><div>Hay ${ex} registros de ejemplo.</div><div style="margin-top:6px"><button class="btn sm" data-act="del-ex">Borrar ejemplos</button></div></div>`:""}
  ${ps.length?`<div class="list">${ps.map(p=>`<button class="item" data-act="proj-edit" data-v="${esc(p.id)}"><div class="logo">${p.logo?`<img src="${esc(p.logo)}" alt="">`:esc((p.nombre||"?").slice(0,2).toUpperCase())}</div><span class="item-main"><span class="item-t">${esc(p.nombre)}</span><span class="item-m">${esc(p.cliente||"")} · ${modsFor(p).length}/${MODS.length} módulos · ${(p.areas||[]).length} áreas</span>${p.aviso?"":`<span class="item-m" style="color:var(--amber)">Falta el aviso de privacidad</span>`}${p.active===false?`<span class="pills"><span class="pill">Archivado</span></span>`:""}</span></button>`).join("")}</div>`:`<div class="empty">Sin proyectos todavía.</div>`}</section>`}`;
@@ -3006,6 +3059,7 @@ function viewApprove(){
  const cons=(S.ap.projects||[]).map(pid=>S.projects[pid]).filter(p=>p&&p.aviso).map(p=>{const c=S.consents[id+"|"+p.id];return`<div class="row" style="justify-content:space-between"><span class="small">${esc(p.nombre)}</span><span class="pill ${c&&c.url===p.aviso?"green":"amber"}">${c&&c.url===p.aviso?"Aceptado "+fmtD(c.at):"Pendiente"}</span></div>`}).join("");
  return`<div class="card"><h2>${esc(b.nombre)}</h2><div class="muted small">${esc(b.email||"")}${b.telefono?" · "+esc(b.telefono):""}<br>${esc(b.empresa||"")}${b.puesto?" · "+esc(b.puesto):""}${q.createdAt?`<br>Solicitó el ${fmtDT(q.createdAt)}`:""}</div>
  ${canEd&&(S.members[id]||S.requests[id])?`<details class="rect"><summary>Corregir datos (rectificación)</summary><div class="form" style="margin-top:8px"><div class="field"><label for="ap-n">Nombre</label><input class="inp" id="ap-n" value="${esc(b.nombre||"")}"></div><div class="field"><label for="ap-t">Teléfono</label><input class="inp" id="ap-t" inputmode="tel" value="${esc(b.telefono||"")}"></div><div class="field"><label for="ap-em">Empresa</label><input class="inp" id="ap-em" value="${esc(b.empresa||"")}"></div><div class="field"><label for="ap-pu">Puesto</label><input class="inp" id="ap-pu" value="${esc(b.puesto||"")}"></div><div class="help">El correo no se cambia aquí porque es el de inicio de sesión. Se guarda al tocar ${isMember?"Guardar cambios":"Aprobar acceso"}.</div></div></details>`:""}</div>
+ ${S.members[id]?`<div class="card"><h3>Documentos del usuario</h3><div class="muted small">CV, constancias y certificados. El usuario también puede cargarlos desde Más.</div>${pdocList(id,canEd)}</div>`:""}
  ${cons?`<div class="card"><h3>Aviso de privacidad</h3>${cons}</div>`:""}
  ${!canEd?`<div class="notice warn">${m.role==="padmin"||m.role==="admin"?"Es administrador; solo el administrador general puede modificarlo.":perfilesOf(m).includes("salud")?"Tiene el perfil Salud; solo el administrador general puede modificarlo.":"Este usuario también trabaja en proyectos que no administras. Solo el administrador general puede modificarlo."}</div>`:`<div class="card"><div class="field"><span class="flabel">Rol</span><div class="chips">${roles.map(([v,l])=>`<button class="chip" data-act="aprole" data-v="${v}" aria-pressed="${S.ap.role===v}">${l}</button>`).join("")}</div><div class="help">${{supervisor:"Captura en campo y ve solo sus registros.",lider:"Captura en campo y ve todos los registros y el tablero de sus proyectos. No elimina ni cierra hallazgos de otros.",visor:"Solo consulta el tablero y los registros de sus proyectos.",padmin:"Administra sus proyectos: aprueba y crea usuarios, edita los datos del proyecto, cierra hallazgos, marca accidentes como enterados y elimina registros. No crea ni elimina proyectos."}[S.ap.role]||""}</div></div>
  <div class="field"><span class="flabel">Perfiles (puede tener varios)</span><div class="chips">${Object.entries(PERF).filter(([k])=>k!=="salud"||S.isAdmin).map(([k,l])=>`<button class="chip" data-act="apperf" data-v="${k}" aria-pressed="${S.ap.perfiles.includes(k)}">${esc(l)}</button>`).join("")}</div><div class="help">Definen qué formatos ve en Campo. ${S.isAdmin?"El perfil Salud da acceso a los datos de salud del proyecto; solo tú lo asignas.":""}</div></div>
@@ -3109,12 +3163,14 @@ function viewMas(){
  ${S.outbox.length?`<div><button class="btn sm" data-act="sync" ${S.online?"":"disabled"}>Enviar ahora</button></div>`:""}</div>
  ${(()=>{const ps=myProjects().filter(p=>p.aviso);return ps.length?`<div class="card"><h3>Avisos de privacidad</h3>${ps.map(p=>{const c=S.myCons[p.id];return`<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:8px"><span class="small"><b>${esc(p.nombre)}</b><br><span class="muted">${S.isAdmin?"Lo aceptan los usuarios del proyecto.":c&&c.url===p.aviso?"Aceptado el "+fmtDT(c.at):"Pendiente"}</span></span>${avisoLink(p,"Ver")}</div>`}).join("")}</div>`:""})()}
  ${(()=>{const n=myProjects().reduce((s,p)=>s+projDocs(p).length,0),pd=docsPending().length;return n?`<div class="card"><h3>Documentos del proyecto</h3><div class="muted small">${pd?`<b>${pd} por firmar de enterado.</b> `:""}${n} documento${n>1?"s":""} publicado${n>1?"s":""}: políticas, procedimientos y más.</div><div><button class="btn sm ${pd?"primary":""}" data-act="docs">Ver documentos</button></div></div>`:""})()}
+ <div class="card"><h3>Mensajes</h3><div class="muted small">${unread().length?`<b>${unread().length} sin leer.</b> `:""}${(S.inbox||[]).length} recibido${(S.inbox||[]).length===1?"":"s"}.</div><div><button class="btn sm ${unread().length?"primary":""}" data-act="msgs">Ver mensajes</button></div></div>
+ ${S.isAdmin?"":`<div class="card"><h3>Mis documentos</h3><div class="muted small">CV, constancias DC-3, certificados y licencias. Los ve el administrador.</div>${pdocList(S.uid,true)}</div>`}
  <div class="card"><h3>Privacidad y mis datos</h3><div class="muted small">Puedes descargar los datos que la app guarda de ti y ejercer tus derechos de acceso, rectificación, cancelación y oposición (ARCO) o revocar tu consentimiento. La respuesta llega en máximo 20 días hábiles.</div>
  <div class="row"><button class="btn sm" data-act="mydata">Descargar mis datos</button><button class="btn sm" data-act="arco-new">Ejercer derechos ARCO</button></div>
  ${(S.myArco||[]).map(a=>`<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:8px"><span class="small"><b>${esc(a.tipo)}</b> · ${fmtD(a.at)}<br><span class="muted">${esc(a.respuesta||"Sin respuesta todavía")}</span></span><span class="pill ${arcoCls(a)}">${esc(a.estado||"Recibida")}</span></div>`).join("")}</div>
  ${r!=="visor"?`<div class="card"><h3>Portafolio de evidencias EC0680</h3><div class="muted small">Tus formatos agrupados por elemento del estándar.</div><div><button class="btn sm primary" data-act="port">Abrir portafolio</button></div></div>`:""}
  ${installCard()}
- <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.12<br>Elaborado por José Alfredo González García</div>`;
+ <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.13<br>Elaborado por José Alfredo González García</div>`;
 }
 function viewPortfolio(){
  if(wantsHistory())ensureHistory();
@@ -3173,6 +3229,20 @@ document.addEventListener("click",async e=>{
   case"ack":try{await S.db.doc("records/"+v).update({ack:{by:authorName(),at:new Date().toISOString()}});closeModal();toast("Marcado como enterado")}catch(err){toast("No se pudo actualizar.")}break;
   case"del-rec":$("#delConfirm").hidden=false;break;
   case"hist":closeModal();openHist(v);break;
+  case"follow":openFollow([v]);break;
+  case"follow-all":{const by={};filtered().filter(r=>isOpen(r)&&canFollow(r)).forEach(r=>(by[r.authorId]=by[r.authorId]||[]).push(r.id));const ks=Object.keys(by);if(!ks.length)return;if(!confirm(`Se enviará un mensaje a ${ks.length} persona${ks.length>1?"s":""} con sus hallazgos abiertos. ¿Continuar?`))return;let n=0;
+   for(const k of ks){const rs=by[k].map(findRec),r=rs[0];const d={to:k,toNombre:r.authorName||"",from:S.uid,fromNombre:authorName(),fromRol:ROLE_L[role()]||"",pid:r.projectId,recIds:by[k],folios:rs.map(x=>x.folio),texto:followText(rs),tipo:"seguimiento",leido:false,at:new Date().toISOString()};try{await S.db.collection("mensajes").doc(Date.now().toString(36)+rid(4)).set(d);n++}catch(e){}}
+   logBit("Envió seguimiento masivo",`${n} personas`);toast(`Mensajes enviados a ${n} persona${n>1?"s":""}`);break}
+  case"fw-send":sendFollow();break;
+  case"fw-wa":{const d=v.length===10?"52"+v:v;window.open(`https://wa.me/${d}?text=${encodeURIComponent($("#fw-t").value)}`,"_blank","noopener");break}
+  case"fw-gm":window.open(gmailURL(v,"Seguimiento a hallazgos abiertos",$("#fw-t").value),"_blank","noopener");break;
+  case"msgs":$("#pushHost").innerHTML="";push("mensajes");break;
+  case"msg-read":markRead(v);render();break;
+  case"msg-rec":{const[mid,id]=v.split("|");markRead(mid);openRecord(id);break}
+  case"msg-reply":openReply(v);break;
+  case"rp-send":sendReply();break;
+  case"pdoc-new":openPdoc(v);break;
+  case"pdoc-del":{const[uid,did]=v.split("|"),m=S.members[uid];if(!m||!confirm("¿Quitar este documento del perfil?"))return;const docs=(m.docs||[]).filter(x=>x.id!==did);try{await S.db.doc("members/"+uid).update({docs});m.docs=docs;logBit("Quitó documento de perfil",m.nombre);render();toast("Documento quitado")}catch(e){toast("No se pudo quitar.")}break}
   case"uf-clear":S.uf={proj:"all",q:""};render();break;
   case"docs":push("documentos");break;
   case"doc-open":{const[pid,did]=v.split("|");openDoc(pid,did);break}
@@ -3256,7 +3326,7 @@ document.addEventListener("change",async e=>{
  else if(c==="rgproj")S.rgProj=t.value;else if(c==="ufproj")S.uf.proj=t.value;else if(c==="dproj")S.dproj=t.value;else if(c==="pwho")S.port.who=t.value;else if(c==="pfrom")S.port.from=t.value||S.port.from;else if(c==="pto")S.port.to=t.value||S.port.to;
  render();
 });
-document.addEventListener("submit",e=>{if(e.target.id==="userForm"){e.preventDefault();submitNewUser();return}if(e.target.id==="arcoForm"){e.preventDefault();submitArco();return}if(e.target.id==="docForm"){e.preventDefault();submitDoc();return}if(e.target.id==="recForm")saveForm(e);else if(e.target.id==="regForm")submitRegister(e);else if(e.target.id==="projForm")saveProject(e);else e.preventDefault()});
+document.addEventListener("submit",e=>{if(e.target.id==="userForm"){e.preventDefault();submitNewUser();return}if(e.target.id==="arcoForm"){e.preventDefault();submitArco();return}if(e.target.id==="docForm"){e.preventDefault();submitDoc();return}if(e.target.id==="pdocForm"){e.preventDefault();submitPdoc();return}if(e.target.id==="recForm")saveForm(e);else if(e.target.id==="regForm")submitRegister(e);else if(e.target.id==="projForm")saveProject(e);else e.preventDefault()});
 window.startApp=boot;
 </script>
 
