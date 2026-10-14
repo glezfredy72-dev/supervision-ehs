@@ -83,6 +83,16 @@ h2{font-size:19px;font-weight:700} h3{font-size:16px;font-weight:700}
 .step.done .dot{background:var(--green);border-color:var(--green)}
 .step .lbl{font-size:13px;font-weight:600;line-height:1.2}
 .mods{display:flex;flex-direction:column;gap:8px}
+.pbar{height:8px;border-radius:4px;background:var(--sunk);overflow:hidden}.pbar span{display:block;height:100%;background:var(--green);border-radius:4px;transition:width .3s}
+.phases{display:flex;flex-direction:column;gap:18px}
+.phase{position:relative;padding-left:40px;display:flex;flex-direction:column;gap:8px}
+.phase::before{content:"";position:absolute;left:14px;top:34px;bottom:-18px;width:2px;background:var(--line)}
+.phase:last-child::before{display:none}
+.ph-n{position:absolute;left:0;top:0;width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px}
+.phase.ok .ph-n{background:var(--green)}
+.mod .chk{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);flex:none;align-self:center;display:grid;place-items:center;color:#fff;font-weight:800;font-size:14px}
+.mod.oblig.done{box-shadow:inset 4px 0 0 var(--green)}.mod.oblig.done .chk{background:var(--green);border-color:var(--green)}
+.mod.next{border-color:var(--accent);box-shadow:inset 4px 0 0 var(--accent)}
 .mod{display:flex;gap:12px;text-align:left;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer}
 .mod:hover,.item:hover{border-color:var(--accent)}
 .mod-t{font-weight:700;line-height:1.2;display:block}
@@ -2162,6 +2172,9 @@ MODS.push(
   {k:"resultado",t:"text",label:"Dictamen"},{k:"restricciones",t:"textarea",label:"Restricciones o recomendaciones"},{k:"vigencia",t:"text",label:"Vigencia"},{k:"valoracion",t:"text",label:"Folio de la valoración"}]}
 );
 MODS.forEach(m=>{if(!m.perfil)m.perfil="seguridad"});
+// Momento de la jornada en que se llena cada formato: a = antes de iniciar, d = durante, c = al cierre
+const FASE={jornada:"a",apr:"a",platica:"a",permiso:"a",signos:"a",valoracion:"a",recorrido:"d",hallazgo:"d",sensibilizacion:"d",buenapractica:"d",recamb:"d",hallazgoamb:"d",residuos:"d",quimicos:"d",contencion:"d",combustion:"d",atencion:"d",botiquin:"d",observaciones:"c",reporte:"c"};
+const FASES=[["a","Antes de iniciar","Inicio, análisis de riesgos, plática y permisos"],["d","Durante la jornada","Recorridos, hallazgos e inspecciones"],["c","Al cierre","Observaciones y cierre de jornada"]];
 const MOD=Object.fromEntries(MODS.map(m=>[m.k,m]));
 const PERF={seguridad:"Seguridad",ambiental:"Ambiental",salud:"Salud (paramédico / enfermería)"};
 const CLOSABLE=["hallazgo","hallazgoamb"];
@@ -2498,10 +2511,15 @@ function viewCampo(){
  <div class="proj"><div class="logo">${p.logo?`<img src="${esc(p.logo)}" alt="">`:esc((p.nombre||"?").slice(0,2).toUpperCase())}</div><div style="min-width:0;flex:1"><h2>${esc(p.nombre)}</h2><div class="muted small">${esc(p.cliente||"")}</div></div></div>
  ${ps.length>1?`<select class="inp" data-chg="proj" aria-label="Proyecto activo">${ps.map(x=>`<option value="${esc(x.id)}" ${x.id===p.id?"selected":""}>${esc(x.nombre)}</option>`).join("")}</select>`:""}
  ${all.some(m=>m.k==="accidente")?`<button class="sos" data-act="new" data-v="accidente"><span class="i">!</span><span><span class="k">Aviso de incidente laboral</span><br><span class="d">Lesión, casi accidente o daño material.</span></span></button>`:""}
- ${steps.length?`<section class="section"><div class="shead"><div><span class="ey">${fmtD(today)}</span><h2>Jornada de hoy</h2></div><span class="muted small">${steps.filter(k=>done.has(k)).length}/${steps.length} formatos</span></div>
- <div class="steps">${steps.map(k=>`<button class="step ${done.has(k)?"done":""}" data-act="new" data-v="${k}"><span class="dot">${done.has(k)?"✓":""}</span><span class="lbl">${esc(MOD[k].name)}</span></button>`).join("")}</div></section>`:""}
- ${mods.some(m=>m.k==="incamb")?`<button class="sos amb" data-act="new" data-v="incamb"><span class="i">!</span><span><span class="k">Incidente ambiental</span><br><span class="d">Derrame, fuga, emisión o descarga.</span></span></button>`:""}
- ${pf.filter(k=>mods.some(m=>m.perfil===k&&m.k!=="accidente"&&m.k!=="incamb")).map(k=>`<section class="section"><h2>${pf.length>1?"Registrar · "+esc(PERF[k].split(" (")[0]):"Registrar"}</h2>${k==="salud"?`<div class="muted small">🔒 Los formatos con datos de salud solo los ve el personal de salud.</div>`:""}<div class="mods">${mods.filter(m=>m.perfil===k&&m.k!=="accidente"&&m.k!=="incamb").map(m=>`<button class="mod" data-act="new" data-v="${m.k}"><span class="code c-${m.code}">${m.code}</span><span><span class="mod-t">${m.col==="salud"?"🔒 ":""}${esc(m.name)}</span><span class="mod-d">${esc(m.desc)}</span><span class="mod-ec">${esc(m.ec)}</span></span></button>`).join("")}</div></section>`).join("")}
+${mods.some(m=>m.k==="incamb")?`<button class="sos amb" data-act="new" data-v="incamb"><span class="i">!</span><span><span class="k">Incidente ambiental</span><br><span class="d">Derrame, fuga, emisión o descarga.</span></span></button>`:""}
+ ${(()=>{const list=mods.filter(m=>m.k!=="accidente"&&m.k!=="incamb"),req=new Set(steps),nDone=steps.filter(k=>done.has(k)).length,cnt=k=>mine.filter(r=>r.day===today&&r.type===k).length;
+  const next=[...FASES.map(f=>f[0])].map(fa=>list.filter(m=>(FASE[m.k]||"d")===fa&&req.has(m.k)&&!done.has(m.k))).flat()[0];
+  return`<section class="section"><div class="shead"><div><span class="ey">${fmtD(today)}</span><h2>Jornada de hoy</h2></div>${steps.length?`<span class="small ${nDone===steps.length?"":"muted"}" style="${nDone===steps.length?"color:var(--green);font-weight:700":""}">${nDone===steps.length?"✓ Obligatorios completos":`${nDone} de ${steps.length} obligatorios`}</span>`:""}</div>
+  ${steps.length?`<div class="pbar" role="progressbar" aria-valuemin="0" aria-valuemax="${steps.length}" aria-valuenow="${nDone}"><span style="width:${Math.round(nDone/steps.length*100)}%"></span></div>`:""}
+  ${pf.includes("salud")?`<div class="muted small">🔒 Los formatos con datos de salud solo los ve el personal de salud.</div>`:""}
+  <div class="phases">${FASES.map(([fa,tl,sub],i)=>{const ms=list.filter(m=>(FASE[m.k]||"d")===fa);if(!ms.length)return"";const rq=ms.filter(m=>req.has(m.k)),ok=rq.length&&rq.every(m=>done.has(m.k));
+   return`<div class="phase ${ok?"ok":""}"><span class="ph-n">${ok?"✓":i+1}</span><div class="shead" style="align-items:center"><div><h3>${tl}</h3><div class="muted small">${sub}</div></div>${rq.length?`<span class="pill ${ok?"green":""}">${rq.filter(m=>done.has(m.k)).length}/${rq.length} obligatorios</span>`:""}</div>
+   <div class="mods">${ms.map(m=>{const r=req.has(m.k),d=done.has(m.k),c=cnt(m.k),nx=next&&next.k===m.k;return`<button class="mod ${r?"oblig":""} ${r&&d?"done":""} ${nx?"next":""}" data-act="new" data-v="${m.k}"><span class="code c-${m.code}">${m.code}</span><span style="min-width:0;flex:1"><span class="mod-t">${m.col==="salud"?"🔒 ":""}${esc(m.name)}</span><span class="mod-d">${esc(m.desc)}</span><span class="mod-ec">${m.perfil!=="seguridad"&&pf.length>1?esc(PERF[m.perfil].split(" (")[0])+" · ":""}${esc(m.ec)}</span>${r||nx||c?`<span class="pills" style="margin-top:6px">${nx?`<span class="pill solid">Siguiente</span>`:""}${r?`<span class="pill ${d?"green":"amber"}">${d?"Obligatorio · llenado":"Obligatorio"}</span>`:""}${!r&&c?`<span class="pill">${c} hoy</span>`:""}</span>`:""}</span>${r?`<span class="chk" aria-label="${d?"Llenado":"Pendiente"}">${d?"✓":""}</span>`:""}</button>`}).join("")}</div></div>`}).join("")}</div></section>`})()}
  ${mods.some(m=>CLOSABLE.includes(m.k))?`<section class="section"><div class="shead"><h2>Hallazgos abiertos</h2>${open.length?`<button class="btn sm ghost" data-act="go-open">Ver todos</button>`:""}</div>${open.length?`<div class="list">${open.map(itemHTML).join("")}</div>`:`<div class="empty">Sin hallazgos abiertos en este proyecto.</div>`}</section>`:""}`;
 }
 
@@ -3184,7 +3202,7 @@ function viewMas(){
  ${(S.myArco||[]).map(a=>`<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:8px"><span class="small"><b>${esc(a.tipo)}</b> · ${fmtD(a.at)}<br><span class="muted">${esc(a.respuesta||"Sin respuesta todavía")}</span></span><span class="pill ${arcoCls(a)}">${esc(a.estado||"Recibida")}</span></div>`).join("")}</div>
  ${r!=="visor"?`<div class="card"><h3>Portafolio de evidencias EC0680</h3><div class="muted small">Tus formatos agrupados por elemento del estándar.</div><div><button class="btn sm primary" data-act="port">Abrir portafolio</button></div></div>`:""}
  ${installCard()}
- <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.15<br>Elaborado por José Alfredo González García</div>`;
+ <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.16<br>Elaborado por José Alfredo González García</div>`;
 }
 function viewPortfolio(){
  if(wantsHistory())ensureHistory();
