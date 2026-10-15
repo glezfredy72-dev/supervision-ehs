@@ -2130,7 +2130,7 @@ MODS.push(
   {k:"observaciones",t:"textarea",label:"Observaciones"},{k:"fotos",t:"photos",label:"Evidencia fotográfica"},{k:"firma",t:"sign",label:"Firma del supervisor"}]}
 );
 /* ----- Perfil Salud (paramédico / enfermería). Los registros con datos de salud van en una colección privada ----- */
-const CONSENT_V="2";
+const CONSENT_V="3";
 const SINTOMAS=["Sin síntomas","Dolor de cabeza","Mareo","Visión borrosa","Zumbido de oídos","Dolor en el pecho","Falta de aire","Náusea","Sudoración excesiva"];
 MODS.push(
  {k:"signos",perfil:"salud",col:"salud",code:"SVT",name:"Signos vitales y presión arterial",ec:"Vigilancia de la salud · NOM-030-SSA2-2009",desc:"Toma de presión y signos vitales con clasificación automática y conducta.",titleK:["colaborador"],fields:[
@@ -2190,7 +2190,7 @@ function bpClass(s,d){s=Number(s);d=Number(d);if(!s||!d)return null;const lv=(s>
 function vitalAlerts(v){if(!v)return[];const a=[],b=bpClass(v.sis,v.dia);if(b&&b.urg)a.push("Presión de 180/110 o más: referir a valoración médica de inmediato");if(v.spo2&&Number(v.spo2)<90)a.push("Saturación menor a 90 %");if(v.fc&&(Number(v.fc)>120||Number(v.fc)<50))a.push("Frecuencia cardiaca fuera de rango");if(v.temp&&Number(v.temp)>=38)a.push("Temperatura de 38 °C o más");if(v.gluc&&(Number(v.gluc)<70||Number(v.gluc)>250))a.push("Glucosa fuera de rango");return a}
 const VIT=[["sis","Sistólica","mmHg"],["dia","Diastólica","mmHg"],["fc","Frec. cardiaca","lpm"],["spo2","Saturación O₂","%"],["temp","Temperatura","°C"],["gluc","Glucosa","mg/dL"]];
 function vitalsText(v){if(!v)return"—";const b=bpClass(v.sis,v.dia);return[v.sis&&v.dia?`PA ${v.sis}/${v.dia} mmHg${b?" ("+b.t+")":""}`:"",v.fc?`FC ${v.fc} lpm`:"",v.spo2?`SpO₂ ${v.spo2} %`:"",v.temp?`Temp ${v.temp} °C`:"",v.gluc?`Glucosa ${v.gluc} mg/dL`:""].filter(Boolean).join(" · ")}
-function consentText(p){return`Autorizo que el personal de salud del proyecto ${p&&p.nombre?p.nombre:""}${p&&p.cliente?" ("+p.cliente+")":""} recabe y registre mis datos de salud (signos vitales, valoración y atención brindada) para vigilar mi salud y seguridad en el trabajo. Sé que estos datos son sensibles, que solo los consulta el personal de salud y los administradores autorizados del proyecto, que el supervisor únicamente conoce el dictamen de aptitud cuando aplica, y que puedo ejercer mis derechos de acceso, rectificación, cancelación y oposición o revocar este consentimiento conforme al aviso de privacidad${p&&p.aviso?" ("+p.aviso+")":""}.`}
+function consentText(p){return`Autorizo que el personal de salud del proyecto ${p&&p.nombre?p.nombre:""}${p&&p.cliente?" ("+p.cliente+")":""} recabe y registre mis datos de salud (signos vitales, valoración y atención brindada) para vigilar mi salud y seguridad en el trabajo. Sé que estos datos son sensibles, que solo los consulta el personal de salud, el supervisor líder y los administradores autorizados del proyecto, que el supervisor únicamente conoce el dictamen de aptitud cuando aplica, y que puedo ejercer mis derechos de acceso, rectificación, cancelación y oposición o revocar este consentimiento conforme al aviso de privacidad${p&&p.aviso?" ("+p.aviso+")":""}.`}
 const DAY_STEPS=["jornada","apr","platica","recorrido","observaciones","reporte"];
 const EC_GROUPS=[{code:"E2147",name:"Prever acciones de prevención",mods:["jornada","apr","platica"]},{code:"E2148",name:"Coordinar acciones de prevención",mods:["recorrido","hallazgo","observaciones","accidente"]},{code:"E2149",name:"Reportar acciones implementadas",mods:["reporte","sensibilizacion","permiso","platica"]}];
 const CF_TYPES={text:"Texto",textarea:"Texto largo",number:"Número",date:"Fecha",yesno:"Sí / No",select:"Lista de opciones"};
@@ -2230,8 +2230,13 @@ function isPA(){return role()==="padmin"}
 // Perfiles (se combinan): Seguridad, Ambiental y Salud. El administrador general los tiene todos.
 function myPerfiles(){if(S.isAdmin)return Object.keys(PERF);const m=member();return(m&&m.perfiles&&m.perfiles.length)?m.perfiles:["seguridad"]}
 function perfilesOf(m){return(m&&m.perfiles&&m.perfiles.length)?m.perfiles:["seguridad"]}
-function canHealth(pid){return S.isAdmin||((myPerfiles().includes("salud")||isPA())&&myPids().includes(pid))}
-function healthPids(){return S.isAdmin?Object.keys(S.projects):(myPerfiles().includes("salud")||isPA())?myPids():[]}
+// Ven salud: admin general, admin de proyecto, supervisor líder y personal de salud (no visores)
+function healthRole(){const ro=role();return ro==="padmin"||ro==="lider"||(ro!=="visor"&&myPerfiles().includes("salud"))}
+function canHealth(pid){return S.isAdmin||(healthRole()&&myPids().includes(pid))}
+function healthPids(){return S.isAdmin?Object.keys(S.projects):healthRole()?myPids():[]}
+// Descargan salud: administradores y supervisor líder (todo su proyecto); quien elaboró el registro (solo los suyos). Visores no.
+function dlHealthAll(){return S.isAdmin||isPA()||role()==="lider"}
+function canDlHealth(r){return!!r&&role()!=="visor"&&(dlHealthAll()||r.authorId===S.uid)}
 function modsMine(p){const pf=myPerfiles();return modsFor(p).filter(m=>!m.hidden&&pf.includes(m.perfil))}
 // Bitácora de auditoría: nadie la edita; solo el administrador general la consulta y la limpia.
 function logBit(accion,detalle,pid){if(!S.db||!S.uid)return;const m=member()||{};try{S.db.collection("bitacora").doc(Date.now().toString(36)+rid(4)).set({uid:S.uid,nombre:m.nombre||S.meName||"",accion,detalle:String(detalle||"").slice(0,300),pid:pid||"",at:new Date().toISOString()}).catch(e=>console.warn("bitácora",e))}catch(e){}}
@@ -2278,7 +2283,7 @@ async function boot(){
  if(user){S.uid=await user.id();const me=await user.me();S.meName=me.name||"";S.isAdmin=(await user.isOwner())||(await user.canEdit())}
  if(!S.uid&&!S.isAdmin){S.status="noid";render();return}
  const err=e=>{console.warn(e);if(e&&e.code==="revoked"){S.status="nodb";render()}};
- // Registros de salud (colección privada): solo personal de salud y administrador general.
+ // Registros de salud (colección privada): personal de salud, supervisor líder y administradores (no visores).
  const onHealth=s=>{S.health=s.docs.map(d=>({id:d.id,...d.data()}));if(S.outbox.length){const ids=new Set(S.health.map(r=>r.id));const before=S.outbox.length;S.outbox=S.outbox.filter(o=>!ids.has(o.id));if(S.outbox.length!==before)saveOutbox()}schedule()};
  const onRecs=s=>{
   S.records=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
@@ -2520,7 +2525,7 @@ ${mods.some(m=>m.k==="incamb")?`<button class="sos amb" data-act="new" data-v="i
   const next=[...FASES.map(f=>f[0])].map(fa=>list.filter(m=>(FASE[m.k]||"d")===fa&&req.has(m.k)&&!done.has(m.k))).flat()[0];
   return`<section class="section"><div class="shead"><div><span class="ey">${fmtD(today)}</span><h2>Jornada de hoy</h2></div>${steps.length?`<span class="small ${nDone===steps.length?"":"muted"}" style="${nDone===steps.length?"color:var(--green);font-weight:700":""}">${nDone===steps.length?"✓ Obligatorios completos":`${nDone} de ${steps.length} obligatorios`}</span>`:""}</div>
   ${steps.length?`<div class="pbar" role="progressbar" aria-valuemin="0" aria-valuemax="${steps.length}" aria-valuenow="${nDone}"><span style="width:${Math.round(nDone/steps.length*100)}%"></span></div>`:""}
-  ${pf.includes("salud")?`<div class="muted small">🔒 Los formatos con datos de salud solo los ve el personal de salud.</div>`:""}
+  ${pf.includes("salud")?`<div class="muted small">🔒 Los formatos con datos de salud solo los ven el personal de salud, el supervisor líder y los administradores.</div>`:""}
   <div class="phases">${FASES.map(([fa,tl,sub],i)=>{const ms=list.filter(m=>(FASE[m.k]||"d")===fa);if(!ms.length)return"";const rq=ms.filter(m=>req.has(m.k)),ok=rq.length&&rq.every(m=>done.has(m.k));
    return`<div class="phase ${ok?"ok":""}"><span class="ph-n">${ok?"✓":i+1}</span><div class="shead" style="align-items:center"><div><h3>${tl}</h3><div class="muted small">${sub}</div></div>${rq.length?`<span class="pill ${ok?"green":""}">${rq.filter(m=>done.has(m.k)).length}/${rq.length} obligatorios</span>`:""}</div>
    <div class="mods">${ms.map(m=>{const r=req.has(m.k),d=done.has(m.k),c=cnt(m.k),nx=next&&next.k===m.k;return`<button class="mod ${r?"oblig":""} ${r&&d?"done":""} ${nx?"next":""}" data-act="new" data-v="${m.k}"><span class="code c-${m.code}">${m.code}</span><span style="min-width:0;flex:1"><span class="mod-t">${m.col==="salud"?"🔒 ":""}${esc(m.name)}</span><span class="mod-d">${esc(m.desc)}</span><span class="mod-ec">${m.perfil!=="seguridad"&&pf.length>1?esc(PERF[m.perfil].split(" (")[0])+" · ":""}${esc(m.ec)}</span>${r||nx||c?`<span class="pills" style="margin-top:6px">${nx?`<span class="pill solid">Siguiente</span>`:""}${r?`<span class="pill ${d?"green":"amber"}">${d?"Obligatorio · llenado":"Obligatorio"}</span>`:""}${!r&&c?`<span class="pill">${c} hoy</span>`:""}</span>`:""}</span>${r?`<span class="chk" aria-label="${d?"Llenado":"Pendiente"}">${d?"✓":""}</span>`:""}</button>`}).join("")}</div></div>`}).join("")}</div></section>`})()}
@@ -2607,7 +2612,7 @@ function vitHint(o){const b=bpClass(o.sis,o.dia),al=vitalAlerts(o);return`${b?`<
 function viewForm(){
  const F=S.form,m=MOD[F.mk],p=S.projects[F.pid];
  return`<div class="row" style="flex-wrap:nowrap;gap:12px"><span class="code c-${m.code}">${m.code}</span><div><div class="ey">${esc(m.ec)}</div><div class="muted small">${esc(p?p.nombre:"")}</div></div></div>
- ${m.k==="accidente"?`<div class="notice warn">Este aviso es interno. No sustituye el aviso al IMSS (ST-7) ni a la STPS.</div>`:""}${m.col==="salud"?`<div class="notice">🔒 <b>Datos de salud (sensibles).</b> Solo los ven el personal de salud y los administradores del proyecto. Captura solo lo necesario y sin diagnósticos.</div>`:""}${m.k==="valoracion"?`<div class="notice warn">Al guardar se crea una <b>constancia de aptitud</b> que sí ve el supervisor: solo lleva el dictamen, las restricciones y la vigencia.</div>`:""}${m.k==="incamb"?`<div class="notice warn">Si se derramó más de 1 m³ de material o residuo peligroso, avisa de inmediato a PROFEPA.</div>`:""}
+ ${m.k==="accidente"?`<div class="notice warn">Este aviso es interno. No sustituye el aviso al IMSS (ST-7) ni a la STPS.</div>`:""}${m.col==="salud"?`<div class="notice">🔒 <b>Datos de salud (sensibles).</b> Solo los ven el personal de salud, el supervisor líder y los administradores del proyecto. Captura solo lo necesario y sin diagnósticos.</div>`:""}${m.k==="valoracion"?`<div class="notice warn">Al guardar se crea una <b>constancia de aptitud</b> que sí ve el supervisor: solo lleva el dictamen, las restricciones y la vigencia.</div>`:""}${m.k==="incamb"?`<div class="notice warn">Si se derramó más de 1 m³ de material o residuo peligroso, avisa de inmediato a PROFEPA.</div>`:""}
  <form class="form" id="recForm" novalidate>${fieldsFor(m,p).map(f=>fieldHTML(f,F.values[f.k],p,F.errors[f.k])).join("")}
  <div class="actions"><button type="button" class="btn ghost" data-act="back">Cancelar</button><button type="submit" class="btn ${m.k==="accidente"?"danger":"primary"}" style="flex:1" id="saveBtn">Guardar ${m.code}</button></div></form>`;
 }
@@ -2699,7 +2704,7 @@ function viewRecords(){
   <select class="inp" data-chg="period" aria-label="Periodo">${PERIODS.map(([v,l])=>`<option value="${v}" ${f.period===v?"selected":""}>${l}</option>`).join("")}</select></div>
  ${role()!=="supervisor"?`<select class="inp" data-chg="forg" aria-label="Personal"><option value="all">Todo el personal</option>${Object.entries(ORG).map(([k,l])=>`<option value="${k}" ${f.org===k?"selected":""}>${l}</option>`).join("")}</select>`:""}
  ${f.status!=="all"?`<div class="row"><span class="pill accent">${esc({abierto:"Hallazgos abiertos",alto:"Abiertos riesgo alto",cerrado:"Cerrados",lesion:"Accidentes con lesión",casi:"Casi accidentes"}[f.status])}</span><button class="btn sm ghost" data-act="clearf">Quitar filtros</button></div>`:""}
- <div class="row"><span class="muted small">${rs.length} registro${rs.length===1?"":"s"}${S.histState==="loading"?" · cargando anteriores…":""}</span><span class="spacer"></span>${S.isAdmin&&!S.sel&&rs.length?`<button class="btn sm" data-act="sel-on">Seleccionar</button>`:""}${f.status==="abierto"&&(S.isAdmin||role()==="lider"||role()==="padmin")&&rs.some(canFollow)?`<button class="btn sm" data-act="follow-all">✉ Seguimiento a todos</button>`:""}${role()!=="supervisor"&&S.dl?`<button class="btn sm" data-act="csv">Exportar a Excel (CSV)</button>`:""}${healthPids().length&&S.dl?`<button class="btn sm" data-act="csv-salud">🔒 Exportar salud</button>`:""}${(S.isAdmin||isPA())&&S.dl&&rs.some(isSalud)?`<button class="btn sm" data-act="zip-salud">🔒 Salud por separado (ZIP)</button>`:""}</div>
+ <div class="row"><span class="muted small">${rs.length} registro${rs.length===1?"":"s"}${S.histState==="loading"?" · cargando anteriores…":""}</span><span class="spacer"></span>${S.isAdmin&&!S.sel&&rs.length?`<button class="btn sm" data-act="sel-on">Seleccionar</button>`:""}${f.status==="abierto"&&(S.isAdmin||role()==="lider"||role()==="padmin")&&rs.some(canFollow)?`<button class="btn sm" data-act="follow-all">✉ Seguimiento a todos</button>`:""}${role()!=="supervisor"&&S.dl?`<button class="btn sm" data-act="csv">Exportar a Excel (CSV)</button>`:""}${S.dl&&rs.some(canDlHealth)?`<button class="btn sm" data-act="csv-salud">🔒 Exportar salud</button>`:""}${S.dl&&rs.some(canDlHealth)?`<button class="btn sm" data-act="zip-salud">🔒 Salud por separado (ZIP)</button>`:""}</div>
  ${S.sel?selBar(rs):""}
  <div class="list" id="recList">${rs.length?rs.slice(0,250).map(itemHTML).join(""):`<div class="empty">No hay registros con estos filtros.</div>`}</div>`;
 }
@@ -2796,7 +2801,7 @@ async function openPdf(id){
  const r=withMedia(findRec(id)),m=MOD[r.type],p=S.projects[r.projectId];
  openModal(`<div class="sheet-head"><h2>Reporte</h2><button class="btn sm ghost" data-act="close">Cerrar</button></div>
  <div class="pdf"><div class="hd">${p&&p.logo?`<img src="${esc(p.logo)}" style="height:38px">`:`<div class="logo" style="width:38px;height:38px;font-size:13px">EHS</div>`}<div><h4>${esc(m.name)}</h4><div style="color:#5a6a70">${esc(projName(r.projectId))} · ${esc(m.ec)}</div></div></div>${recBlock(r)}</div>
- ${S.dl?`<button class="btn primary" data-act="dl-rec" data-v="${esc(r.id)}">Descargar reporte</button><div class="help">Se descarga como página. Ábrela y usa Imprimir → Guardar como PDF para enviarla.</div>`:""}`);
+ ${S.dl&&(!isSalud(r)||canDlHealth(r))?`<button class="btn primary" data-act="dl-rec" data-v="${esc(r.id)}">Descargar reporte</button><div class="help">Se descarga como página. Ábrela y usa Imprimir → Guardar como PDF para enviarla.</div>`:""}`);
 }
 function csvExport(){const rs=filtered().filter(r=>!isSalud(r));logBit("Exportó registros (CSV)",rs.length+" registros");const q=s=>'"'+String(s??"").replace(/"/g,'""').replace(/\n/g," ")+'"';
  const cols=["Folio","Formato","Proyecto","Fecha","Registró","Personal","Empresa","Área","Tipo","Riesgo","Estado","Descripción"];
@@ -2840,7 +2845,7 @@ function dashSalud(D,kpi){const apt=D.by("aptitud"),hp=healthPids().length;
  // Seguimiento: última toma por colaborador con hipertensión
  const last={};D.all.filter(r=>r.type==="signos"&&r.values.empleado).forEach(r=>{const k=r.projectId+"|"+r.values.empleado;if(!last[k]||r.createdAt>last[k].createdAt)last[k]=r});
  const seg=Object.values(last).filter(r=>{const b=r.values.vitales&&bpClass(r.values.vitales.sis,r.values.vitales.dia);return b&&b.lv>=3}).sort((a,b)=>bpClass(b.values.vitales.sis,b.values.vitales.dia).lv-bpClass(a.values.vitales.sis,a.values.vitales.dia).lv);
- return`<section class="section"><h2>🔒 Salud</h2><div class="muted small">Solo lo ven el personal de salud y los administradores.</div><div class="kpis">
+ return`<section class="section"><h2>🔒 Salud</h2><div class="muted small">Solo lo ven el personal de salud, el supervisor líder y los administradores.</div><div class="kpis">
  ${kpi(sv.length,"Tomas de presión",`${new Set(sv.map(r=>r.values.empleado)).size} colaboradores`,"t:signos")}
  ${kpi(hta.length,"Con hipertensión",sv.length?`${Math.round(hta.length/sv.length*100)} % de las tomas · ${ref} referidos`:"Grado 1 o mayor (NOM-030-SSA2)","t:signos",hta.length?"st-amber":"")}
  ${kpi(val.length,"Valoraciones previas",`${val.filter(r=>r.values.resultado==="No apto").length} no aptos`,"t:valoracion")}
@@ -2855,11 +2860,11 @@ function openHist(id){const r=findRec(id);if(!r)return;const rs=healthOf(r),v=r.
  openModal(`<div class="sheet-head"><div><span class="ey">🔒 Historial de salud</span><h2>${esc(v.colaborador)}</h2><div class="muted small">No. de empleado ${esc(v.empleado)} · ${esc(projName(r.projectId))}</div></div><button class="btn sm ghost" data-act="close">Cerrar</button></div>
  <div class="tbl"><table><thead><tr><th>Fecha</th><th>Formato</th><th>Presión</th><th>Resultado</th></tr></thead><tbody>${rs.map(x=>{const y=x.values||{},vt=y.vitales||{},b=bpClass(vt.sis,vt.dia);return`<tr><td>${fmtD(x.createdAt)}</td><td>${MOD[x.type].code}</td><td>${b?`<span class="pill ${b.cls}">${vt.sis}/${vt.dia}</span>`:"—"}</td><td class="small">${esc(y.conducta||y.resultado||y.destino||"")}</td></tr>`}).join("")}</tbody></table></div>
  ${S.histState!=="done"?`<div class="help">Se muestran los últimos ${WIN_MONTHS} meses; los anteriores se están cargando.</div>`:""}
- ${S.dl?`<button class="btn primary" data-act="hist-dl" data-v="${esc(id)}">Descargar expediente del colaborador</button><div class="help">Úsalo para responder una solicitud de acceso (derechos ARCO) del colaborador.</div>`:""}`)}
-async function dlExpediente(id){const r=findRec(id);if(!r)return;if(S.histState!=="done")await ensureHistory();const rs=healthOf(r).slice().reverse();await loadMedia(rs.map(x=>x.id));const v=r.values;
+ ${S.dl&&role()!=="visor"?`<button class="btn primary" data-act="hist-dl" data-v="${esc(id)}">Descargar expediente del colaborador</button><div class="help">Úsalo para responder una solicitud de acceso (derechos ARCO) del colaborador.</div>`:""}`)}
+async function dlExpediente(id){const r=findRec(id);if(!r)return;if(S.histState!=="done")await ensureHistory();const rs=healthOf(r).filter(canDlHealth).slice().reverse();if(!rs.length){toast("No tienes registros de este colaborador para descargar.");return}await loadMedia(rs.map(x=>x.id));const v=r.values;
  logBit("Descargó expediente de salud","No. "+v.empleado,r.projectId);
  save(`Expediente-salud-${String(v.empleado).replace(/\W+/g,"_")}.html`,docShell("Expediente de salud del colaborador",`${v.colaborador} · No. ${v.empleado} · ${projName(r.projectId)} · Documento confidencial (datos personales sensibles)`,S.projects[r.projectId],rs.map(recBlock).join("")))}
-function csvSalud(){const rs=filtered().filter(isSalud);const q=s=>'"'+String(s??"").replace(/"/g,'""').replace(/\n/g," ")+'"';
+function csvSalud(){const rs=filtered().filter(canDlHealth);if(!rs.length){toast("No hay registros de salud que puedas descargar.");return}const q=s=>'"'+String(s??"").replace(/"/g,'""').replace(/\n/g," ")+'"';
  const cols=["Folio","Formato","Proyecto","Fecha","Colaborador","No. empleado","Empresa","Motivo o trabajo","Sistólica","Diastólica","FC","SpO2","Temp","Glucosa","Clasificación","Conducta / dictamen / destino","Registró"];
  const rows=rs.map(r=>{const v=r.values||{},vt=v.vitales||{};return[r.folio,MOD[r.type].name,projName(r.projectId),fmtDT(r.createdAt),v.colaborador,v.empleado,v.empresa,v.motivo||v.trabajo||v.lesion||"",vt.sis,vt.dia,vt.fc,vt.spo2,vt.temp,vt.gluc,vt.clasif,v.conducta||v.resultado||v.destino||"",r.authorName].map(q).join(",")});
  logBit("Exportó datos de salud (CSV)",rs.length+" registros");
@@ -3229,7 +3234,7 @@ function viewMas(){
  ${(S.myArco||[]).map(a=>`<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:8px"><span class="small"><b>${esc(a.tipo)}</b> · ${fmtD(a.at)}<br><span class="muted">${esc(a.respuesta||"Sin respuesta todavía")}</span></span><span class="pill ${arcoCls(a)}">${esc(a.estado||"Recibida")}</span></div>`).join("")}</div>
  ${r!=="visor"?`<div class="card"><h3>Portafolio de evidencias EC0680</h3><div class="muted small">Tus formatos agrupados por elemento del estándar.</div><div><button class="btn sm primary" data-act="port">Abrir portafolio</button></div></div>`:""}
  ${installCard()}
- <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.18<br>Elaborado por José Alfredo González García</div>`;
+ <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.19<br>Elaborado por José Alfredo González García</div>`;
 }
 function viewPortfolio(){
  if(wantsHistory())ensureHistory();
@@ -3278,7 +3283,7 @@ async function dlPortZip(btn){
  const zip=makeZip(files);logBit("Descargó registros en ZIP",`${rs.length} registros · por ${g}`);
  await save(`Registros_${S.port.from}_a_${S.port.to}.zip`,zip);if(btn){btn.disabled=false;btn.textContent=`Descargar ZIP (${rs.length} registros)`}}
 // Registros de salud por separado (administrador general y administradores de proyecto): Proyecto / Colaborador / archivo
-async function dlSaludZip(btn){if(!S.isAdmin&&!isPA())return;const rs=filtered().filter(isSalud).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt)));if(!rs.length){toast("No hay registros de salud con estos filtros.");return}
+async function dlSaludZip(btn){const rs=filtered().filter(r=>isSalud(r)&&canDlHealth(r)).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt)));if(!rs.length){toast("No hay registros de salud con estos filtros.");return}
  if(!confirm(`Se descargarán ${rs.length} registros de salud (datos sensibles). Guárdalos en un lugar protegido y no los compartas por WhatsApp o correo sin cifrar. ¿Continuar?`))return;
  if(btn){btn.disabled=true;btn.textContent="Preparando…"}await loadMedia(rs.map(r=>r.id));
  const files=[],idx={},seen={},q=x=>'"'+String(x??"").replace(/"/g,'""').replace(/\n/g," ")+'"',rows=[];
@@ -3326,7 +3331,7 @@ document.addEventListener("click",async e=>{
   case"close":closeModal();break;
   case"open":openRecord(v);break;
   case"pdf":openPdf(v);break;
-  case"dl-rec":{await loadMedia([v]);const r=withMedia(findRec(v));save(`${r.folio}.html`,docShell(MOD[r.type].name,`${projName(r.projectId)} · ${MOD[r.type].ec}`,S.projects[r.projectId],recBlock(r)));break}
+  case"dl-rec":{if(isSalud(findRec(v))&&!canDlHealth(findRec(v))){toast("No tienes permiso para descargar este registro de salud.");break}await loadMedia([v]);const r=withMedia(findRec(v));save(`${r.folio}.html`,docShell(MOD[r.type].name,`${projName(r.projectId)} · ${MOD[r.type].ec}`,S.projects[r.projectId],recBlock(r)));break}
   case"notify":openNotify(allRecords().find(r=>r.id===v));break;
   case"copy":{const t=$("#nt-txt");try{await navigator.clipboard.writeText(t.value);toast("Mensaje copiado")}catch(err){t.focus();t.select();toast("Selecciona y copia el texto")}break}
   case"close-h":{const note=$("#cl-note").value.trim();if(!note){toast("Describe la acción implementada.");return}try{await S.db.doc("records/"+v).update({status:"cerrado",closedAt:new Date().toISOString(),closedBy:authorName(),closeNote:note});closeModal();toast("Hallazgo cerrado")}catch(err){toast("No se pudo cerrar. Revisa tu conexión.")}break}
