@@ -106,6 +106,8 @@ h2{font-size:19px;font-weight:700} h3{font-size:16px;font-weight:700}
 .cam{background:#000;border-radius:10px;overflow:hidden;aspect-ratio:3/4;max-height:60vh;display:grid;place-items:center}.cam video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
 .selfie{display:flex;flex-direction:column;gap:6px}.selfie img{width:220px;border-radius:8px;border:1px solid var(--line)}
 .btn.wa{background:var(--accent);border-color:var(--accent);color:#fff}.btn.wa.done{background:var(--sunk);border-color:var(--line);color:var(--ink-2)}
+.jcard{gap:8px}.jfase{border-top:1px solid var(--line);padding-top:8px;display:flex;flex-direction:column;gap:4px}
+.jrow{display:flex;gap:8px;align-items:center;width:100%;border:0;background:none;padding:6px 4px;border-radius:6px;cursor:pointer;text-align:left}.jrow:hover{background:var(--sunk)}.jrow .jt{flex:1;min-width:0;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .msg{border-top:1px solid var(--line);padding-top:8px;display:flex;flex-direction:column;gap:3px}.msg.me{background:var(--accent-soft);border-radius:8px;padding:8px;border:0}
 .msgc.unread{border-color:var(--accent);box-shadow:inset 4px 0 0 var(--accent)}
 .push .pi{font-size:16px}
@@ -1985,7 +1987,9 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localh
       try { Object.keys(localStorage).filter(k => k.startsWith("ehs.")).forEach(k => localStorage.removeItem(k)); } catch (e) {}
       location.reload();
     },
-    authError
+    authError,
+    // Envía el correo oficial de Firebase para crear una contraseña nueva
+    async resetPass(email){ try { await FB.sendPasswordResetEmail(auth, email); } catch (e) { throw { code: e.code, message: authError(e) }; } }
   };
 
   window.addEventListener("DOMContentLoaded", () => {
@@ -2126,7 +2130,7 @@ MODS.push(
   {k:"observaciones",t:"textarea",label:"Observaciones"},{k:"fotos",t:"photos",label:"Evidencia fotográfica"},{k:"firma",t:"sign",label:"Firma del supervisor"}]}
 );
 /* ----- Perfil Salud (paramédico / enfermería). Los registros con datos de salud van en una colección privada ----- */
-const CONSENT_V="1";
+const CONSENT_V="2";
 const SINTOMAS=["Sin síntomas","Dolor de cabeza","Mareo","Visión borrosa","Zumbido de oídos","Dolor en el pecho","Falta de aire","Náusea","Sudoración excesiva"];
 MODS.push(
  {k:"signos",perfil:"salud",col:"salud",code:"SVT",name:"Signos vitales y presión arterial",ec:"Vigilancia de la salud · NOM-030-SSA2-2009",desc:"Toma de presión y signos vitales con clasificación automática y conducta.",titleK:["colaborador"],fields:[
@@ -2186,7 +2190,7 @@ function bpClass(s,d){s=Number(s);d=Number(d);if(!s||!d)return null;const lv=(s>
 function vitalAlerts(v){if(!v)return[];const a=[],b=bpClass(v.sis,v.dia);if(b&&b.urg)a.push("Presión de 180/110 o más: referir a valoración médica de inmediato");if(v.spo2&&Number(v.spo2)<90)a.push("Saturación menor a 90 %");if(v.fc&&(Number(v.fc)>120||Number(v.fc)<50))a.push("Frecuencia cardiaca fuera de rango");if(v.temp&&Number(v.temp)>=38)a.push("Temperatura de 38 °C o más");if(v.gluc&&(Number(v.gluc)<70||Number(v.gluc)>250))a.push("Glucosa fuera de rango");return a}
 const VIT=[["sis","Sistólica","mmHg"],["dia","Diastólica","mmHg"],["fc","Frec. cardiaca","lpm"],["spo2","Saturación O₂","%"],["temp","Temperatura","°C"],["gluc","Glucosa","mg/dL"]];
 function vitalsText(v){if(!v)return"—";const b=bpClass(v.sis,v.dia);return[v.sis&&v.dia?`PA ${v.sis}/${v.dia} mmHg${b?" ("+b.t+")":""}`:"",v.fc?`FC ${v.fc} lpm`:"",v.spo2?`SpO₂ ${v.spo2} %`:"",v.temp?`Temp ${v.temp} °C`:"",v.gluc?`Glucosa ${v.gluc} mg/dL`:""].filter(Boolean).join(" · ")}
-function consentText(p){return`Autorizo que el personal de salud del proyecto ${p&&p.nombre?p.nombre:""}${p&&p.cliente?" ("+p.cliente+")":""} recabe y registre mis datos de salud (signos vitales, valoración y atención brindada) para vigilar mi salud y seguridad en el trabajo. Sé que estos datos son sensibles, que solo los consulta el personal de salud autorizado, que el supervisor únicamente conoce el dictamen de aptitud cuando aplica, y que puedo ejercer mis derechos de acceso, rectificación, cancelación y oposición o revocar este consentimiento conforme al aviso de privacidad${p&&p.aviso?" ("+p.aviso+")":""}.`}
+function consentText(p){return`Autorizo que el personal de salud del proyecto ${p&&p.nombre?p.nombre:""}${p&&p.cliente?" ("+p.cliente+")":""} recabe y registre mis datos de salud (signos vitales, valoración y atención brindada) para vigilar mi salud y seguridad en el trabajo. Sé que estos datos son sensibles, que solo los consulta el personal de salud y los administradores autorizados del proyecto, que el supervisor únicamente conoce el dictamen de aptitud cuando aplica, y que puedo ejercer mis derechos de acceso, rectificación, cancelación y oposición o revocar este consentimiento conforme al aviso de privacidad${p&&p.aviso?" ("+p.aviso+")":""}.`}
 const DAY_STEPS=["jornada","apr","platica","recorrido","observaciones","reporte"];
 const EC_GROUPS=[{code:"E2147",name:"Prever acciones de prevención",mods:["jornada","apr","platica"]},{code:"E2148",name:"Coordinar acciones de prevención",mods:["recorrido","hallazgo","observaciones","accidente"]},{code:"E2149",name:"Reportar acciones implementadas",mods:["reporte","sensibilizacion","permiso","platica"]}];
 const CF_TYPES={text:"Texto",textarea:"Texto largo",number:"Número",date:"Fecha",yesno:"Sí / No",select:"Lista de opciones"};
@@ -2213,7 +2217,7 @@ const S={db:null,user:null,dl:null,uid:null,meName:"",isAdmin:false,status:"load
  projects:{},members:{},requests:{},reqOwn:null,health:[],reqProj:{},pub:{},myCons:{},consents:{},records:[],media:{},history:{},histState:null,loaded:{p:0,m:0,q:0,r:0,c:0},
  tab:null,stack:[],form:null,projectId:lsGet("ehs.project"),editProject:null,adminSeg:"usuarios",reqId:null,ap:null,
  outbox:(()=>{try{return JSON.parse(lsGet("ehs.outbox")||"[]")}catch(e){return[]}})(),online:navigator.onLine,
- f:{proj:"all",period:"30",type:"all",status:"all",q:""},port:{who:"",from:localD(new Date(Date.now()-30*864e5)),to:localD()},seen:null};
+ f:{proj:"all",period:"30",type:"all",status:"all",q:""},port:{who:"",proj:"all",group:"proyecto",from:localD(new Date(Date.now()-30*864e5)),to:localD()},seen:null};
 const member=()=>S.members[S.uid];
 const ORG={principal:"Empresa principal",contratista:"Contratista"};
 const ROLE_L={supervisor:"Supervisor",lider:"Supervisor líder",visor:"Visor",padmin:"Administrador de proyecto",admin:"Administrador general"};
@@ -2226,8 +2230,8 @@ function isPA(){return role()==="padmin"}
 // Perfiles (se combinan): Seguridad, Ambiental y Salud. El administrador general los tiene todos.
 function myPerfiles(){if(S.isAdmin)return Object.keys(PERF);const m=member();return(m&&m.perfiles&&m.perfiles.length)?m.perfiles:["seguridad"]}
 function perfilesOf(m){return(m&&m.perfiles&&m.perfiles.length)?m.perfiles:["seguridad"]}
-function canHealth(pid){return S.isAdmin||(myPerfiles().includes("salud")&&myPids().includes(pid))}
-function healthPids(){return S.isAdmin?Object.keys(S.projects):myPerfiles().includes("salud")?myPids():[]}
+function canHealth(pid){return S.isAdmin||((myPerfiles().includes("salud")||isPA())&&myPids().includes(pid))}
+function healthPids(){return S.isAdmin?Object.keys(S.projects):(myPerfiles().includes("salud")||isPA())?myPids():[]}
 function modsMine(p){const pf=myPerfiles();return modsFor(p).filter(m=>!m.hidden&&pf.includes(m.perfil))}
 // Bitácora de auditoría: nadie la edita; solo el administrador general la consulta y la limpia.
 function logBit(accion,detalle,pid){if(!S.db||!S.uid)return;const m=member()||{};try{S.db.collection("bitacora").doc(Date.now().toString(36)+rid(4)).set({uid:S.uid,nombre:m.nombre||S.meName||"",accion,detalle:String(detalle||"").slice(0,300),pid:pid||"",at:new Date().toISOString()}).catch(e=>console.warn("bitácora",e))}catch(e){}}
@@ -2603,7 +2607,7 @@ function vitHint(o){const b=bpClass(o.sis,o.dia),al=vitalAlerts(o);return`${b?`<
 function viewForm(){
  const F=S.form,m=MOD[F.mk],p=S.projects[F.pid];
  return`<div class="row" style="flex-wrap:nowrap;gap:12px"><span class="code c-${m.code}">${m.code}</span><div><div class="ey">${esc(m.ec)}</div><div class="muted small">${esc(p?p.nombre:"")}</div></div></div>
- ${m.k==="accidente"?`<div class="notice warn">Este aviso es interno. No sustituye el aviso al IMSS (ST-7) ni a la STPS.</div>`:""}${m.col==="salud"?`<div class="notice">🔒 <b>Datos de salud (sensibles).</b> Solo los ven el personal de salud del proyecto y el administrador general. Captura solo lo necesario y sin diagnósticos.</div>`:""}${m.k==="valoracion"?`<div class="notice warn">Al guardar se crea una <b>constancia de aptitud</b> que sí ve el supervisor: solo lleva el dictamen, las restricciones y la vigencia.</div>`:""}${m.k==="incamb"?`<div class="notice warn">Si se derramó más de 1 m³ de material o residuo peligroso, avisa de inmediato a PROFEPA.</div>`:""}
+ ${m.k==="accidente"?`<div class="notice warn">Este aviso es interno. No sustituye el aviso al IMSS (ST-7) ni a la STPS.</div>`:""}${m.col==="salud"?`<div class="notice">🔒 <b>Datos de salud (sensibles).</b> Solo los ven el personal de salud y los administradores del proyecto. Captura solo lo necesario y sin diagnósticos.</div>`:""}${m.k==="valoracion"?`<div class="notice warn">Al guardar se crea una <b>constancia de aptitud</b> que sí ve el supervisor: solo lleva el dictamen, las restricciones y la vigencia.</div>`:""}${m.k==="incamb"?`<div class="notice warn">Si se derramó más de 1 m³ de material o residuo peligroso, avisa de inmediato a PROFEPA.</div>`:""}
  <form class="form" id="recForm" novalidate>${fieldsFor(m,p).map(f=>fieldHTML(f,F.values[f.k],p,F.errors[f.k])).join("")}
  <div class="actions"><button type="button" class="btn ghost" data-act="back">Cancelar</button><button type="submit" class="btn ${m.k==="accidente"?"danger":"primary"}" style="flex:1" id="saveBtn">Guardar ${m.code}</button></div></form>`;
 }
@@ -2685,18 +2689,40 @@ function filtered(){
 }
 const PERIODS=[["7","Últimos 7 días"],["30","Últimos 30 días"],["90","Últimos 90 días"],["365","Último año"],["all","Todo"]];
 function viewRecords(){
+ const vw=S.rview==="jornada"?"jornada":"lista",tabs=`<div class="chips"><button class="chip" data-act="rview" data-v="lista" aria-pressed="${vw==="lista"}">Lista</button><button class="chip" data-act="rview" data-v="jornada" aria-pressed="${vw==="jornada"}">Por jornada</button></div>`;
+ if(vw==="jornada")return syncBanner()+tabs+viewJornada();
  const rs=filtered(),f=S.f,ps=myProjects();
- return`${syncBanner()}<input class="inp" type="search" placeholder="Buscar folio, área, persona…" value="${esc(f.q)}" data-inp="q" aria-label="Buscar">
+ return`${syncBanner()}${tabs}<input class="inp" type="search" placeholder="Buscar folio, área, persona…" value="${esc(f.q)}" data-inp="q" aria-label="Buscar">
  ${ps.length>1?`<select class="inp" data-chg="fproj" aria-label="Proyecto"><option value="all">Todos los proyectos</option>${ps.map(p=>`<option value="${esc(p.id)}" ${f.proj===p.id?"selected":""}>${esc(p.nombre)}</option>`).join("")}</select>`:""}
  <div class="row" style="flex-wrap:nowrap">
   <select class="inp" data-chg="ftype" aria-label="Formato"><option value="all">Todos los formatos</option>${MODS.filter(m=>m.col!=="salud"||healthPids().length).map(m=>`<option value="${m.k}" ${f.type===m.k?"selected":""}>${m.code} · ${esc(m.name)}</option>`).join("")}</select>
   <select class="inp" data-chg="period" aria-label="Periodo">${PERIODS.map(([v,l])=>`<option value="${v}" ${f.period===v?"selected":""}>${l}</option>`).join("")}</select></div>
  ${role()!=="supervisor"?`<select class="inp" data-chg="forg" aria-label="Personal"><option value="all">Todo el personal</option>${Object.entries(ORG).map(([k,l])=>`<option value="${k}" ${f.org===k?"selected":""}>${l}</option>`).join("")}</select>`:""}
  ${f.status!=="all"?`<div class="row"><span class="pill accent">${esc({abierto:"Hallazgos abiertos",alto:"Abiertos riesgo alto",cerrado:"Cerrados",lesion:"Accidentes con lesión",casi:"Casi accidentes"}[f.status])}</span><button class="btn sm ghost" data-act="clearf">Quitar filtros</button></div>`:""}
- <div class="row"><span class="muted small">${rs.length} registro${rs.length===1?"":"s"}${S.histState==="loading"?" · cargando anteriores…":""}</span><span class="spacer"></span>${S.isAdmin&&!S.sel&&rs.length?`<button class="btn sm" data-act="sel-on">Seleccionar</button>`:""}${f.status==="abierto"&&(S.isAdmin||role()==="lider"||role()==="padmin")&&rs.some(canFollow)?`<button class="btn sm" data-act="follow-all">✉ Seguimiento a todos</button>`:""}${role()!=="supervisor"&&S.dl?`<button class="btn sm" data-act="csv">Exportar a Excel (CSV)</button>`:""}${healthPids().length&&S.dl?`<button class="btn sm" data-act="csv-salud">🔒 Exportar salud</button>`:""}</div>
+ <div class="row"><span class="muted small">${rs.length} registro${rs.length===1?"":"s"}${S.histState==="loading"?" · cargando anteriores…":""}</span><span class="spacer"></span>${S.isAdmin&&!S.sel&&rs.length?`<button class="btn sm" data-act="sel-on">Seleccionar</button>`:""}${f.status==="abierto"&&(S.isAdmin||role()==="lider"||role()==="padmin")&&rs.some(canFollow)?`<button class="btn sm" data-act="follow-all">✉ Seguimiento a todos</button>`:""}${role()!=="supervisor"&&S.dl?`<button class="btn sm" data-act="csv">Exportar a Excel (CSV)</button>`:""}${healthPids().length&&S.dl?`<button class="btn sm" data-act="csv-salud">🔒 Exportar salud</button>`:""}${(S.isAdmin||isPA())&&S.dl&&rs.some(isSalud)?`<button class="btn sm" data-act="zip-salud">🔒 Salud por separado (ZIP)</button>`:""}</div>
  ${S.sel?selBar(rs):""}
  <div class="list" id="recList">${rs.length?rs.slice(0,250).map(itemHTML).join(""):`<div class="empty">No hay registros con estos filtros.</div>`}</div>`;
 }
+// Registros de un día agrupados por persona y por momento de la jornada
+const hhmm=d=>new Date(d).toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"});
+function viewJornada(){const day=S.jday||localD(),ps=myProjects(),pid=S.f.proj;
+ if(new Date(day+"T00:00")<windowStart()&&S.histState!=="done")ensureHistory();
+ const recs=visible().filter(r=>r.day===day&&(pid==="all"||r.projectId===pid)).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt)));
+ const by={};recs.forEach(r=>{(by[r.authorId]=by[r.authorId]||{id:r.authorId,n:r.authorName,emp:recOrg(r)==="contratista"?(recEmp(r)||"Contratista"):"Empresa principal",L:[]}).L.push(r)});
+ const segOf=a=>{const m=S.members[a.id];return m?perfilesOf(m).includes("seguridad"):a.L.some(r=>MOD[r.type]&&MOD[r.type].perfil==="seguridad")};
+ const people=Object.values(by).sort((a,b)=>(a.n||"").localeCompare(b.n||""));
+ const inProjs=m=>(m.projects||[]).some(x=>pid==="all"?myPids().includes(x):x===pid);
+ const absent=(S.isAdmin||isPA())?Object.values(S.members).filter(m=>!by[m.id]&&m.active!==false&&!m.rejected&&["supervisor","lider"].includes(m.role)&&perfilesOf(m).includes("seguridad")&&inProjs(m)).sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||"")):[];
+ const complete=people.filter(a=>segOf(a)&&DAY_STEPS.every(k=>a.L.some(r=>r.type===k))).length,withSeg=people.filter(segOf).length;
+ const card=a=>{const types=new Set(a.L.map(r=>r.type)),seg=segOf(a),miss=seg?DAY_STEPS.filter(k=>!types.has(k)):[];
+  return`<div class="card jcard"><div class="row" style="justify-content:space-between;flex-wrap:nowrap;align-items:flex-start"><div style="min-width:0"><b>${esc(a.n||"")}</b><div class="small muted">${esc(a.emp)} · ${a.L.length} registro${a.L.length>1?"s":""}</div></div>${seg?`<span class="pill ${miss.length?"amber":"green"}">${miss.length?`Faltan ${miss.length}`:"Jornada completa ✓"}</span>`:""}</div>
+  ${FASES.map(([fa,tl])=>{const L=a.L.filter(r=>(FASE[r.type]||"d")===fa),ms=miss.filter(k=>FASE[k]===fa);if(!L.length&&!ms.length)return"";
+   return`<div class="jfase"><div class="ey">${tl}</div>${L.map(r=>{const m=MOD[r.type]||{code:"REG"};return`<button class="jrow" data-act="open" data-v="${esc(r.id)}"><span class="mono small muted">${hhmm(r.createdAt)}</span><span class="code c-${m.code}" style="width:42px;padding:3px 0">${m.code}</span><span class="jt">${isSalud(r)?"🔒 ":""}${esc(recTitle(r).slice(0,60))}</span>${r.pending?`<span class="pill amber">Por enviar</span>`:CLOSABLE.includes(r.type)?`<span class="pill ${r.status==="cerrado"?"green":"amber"}">${r.status==="cerrado"?"Cerrado":"Abierto"}</span>`:""}</button>`}).join("")}${ms.length?`<div class="pills">${ms.map(k=>`<span class="pill amber">Falta ${MOD[k].code} · ${esc(MOD[k].name)}</span>`).join("")}</div>`:""}</div>`}).join("")}</div>`};
+ return`<div class="card" style="gap:8px"><div class="row" style="flex-wrap:nowrap"><button class="btn sm" data-act="jday" data-v="-1" aria-label="Día anterior">◀</button><input class="inp" type="date" data-chg="jday" value="${day}" max="${localD()}" style="flex:1"><button class="btn sm" data-act="jday" data-v="1" aria-label="Día siguiente" ${day>=localD()?"disabled":""}>▶</button></div>
+ ${ps.length>1?`<select class="inp" data-chg="fproj" aria-label="Proyecto"><option value="all">Todos los proyectos</option>${ps.map(p=>`<option value="${esc(p.id)}" ${pid===p.id?"selected":""}>${esc(p.nombre)}</option>`).join("")}</select>`:""}
+ <div class="small muted">${people.length?`${people.length} persona${people.length>1?"s":""} con registros · ${recs.length} registros${withSeg?` · <b>${complete} de ${withSeg}</b> con jornada completa (6 obligatorios)`:""}`:"Sin registros este día."}${S.histState==="loading"?" · cargando anteriores…":""}</div></div>
+ ${people.map(card).join("")}
+ ${absent.length?`<section class="section"><h3>Sin registros este día (${absent.length})</h3><div class="list">${absent.map(m=>`<div class="item" style="cursor:default"><span class="item-main"><span class="item-t">${esc(m.nombre)}</span><span class="item-m">${esc(orgLabel(m.origen||"principal",m.empresa))} · ${esc(ROLE_L[m.role]||"")}</span></span><span class="pill">Sin registros</span></div>`).join("")}</div></section>`:""}`}
 // Eliminación de varios registros (solo administrador general)
 function delProgHTML(){const d=S.delProg;return`<b>Eliminando… ${d.k} de ${d.n}</b><div style="height:6px;background:var(--sunk);border-radius:3px"><div style="height:6px;border-radius:3px;background:var(--red);width:${Math.round(d.k/d.n*100)}%"></div></div>`}
 function selBar(rs){if(S.delProg)return`<div class="selbar" id="selBar">${delProgHTML()}</div>`;const ok=rs.filter(r=>!r.pending),n=S.sel.size;
@@ -2814,7 +2840,7 @@ function dashSalud(D,kpi){const apt=D.by("aptitud"),hp=healthPids().length;
  // Seguimiento: última toma por colaborador con hipertensión
  const last={};D.all.filter(r=>r.type==="signos"&&r.values.empleado).forEach(r=>{const k=r.projectId+"|"+r.values.empleado;if(!last[k]||r.createdAt>last[k].createdAt)last[k]=r});
  const seg=Object.values(last).filter(r=>{const b=r.values.vitales&&bpClass(r.values.vitales.sis,r.values.vitales.dia);return b&&b.lv>=3}).sort((a,b)=>bpClass(b.values.vitales.sis,b.values.vitales.dia).lv-bpClass(a.values.vitales.sis,a.values.vitales.dia).lv);
- return`<section class="section"><h2>🔒 Salud</h2><div class="muted small">Solo lo ven el personal de salud y el administrador general.</div><div class="kpis">
+ return`<section class="section"><h2>🔒 Salud</h2><div class="muted small">Solo lo ven el personal de salud y los administradores.</div><div class="kpis">
  ${kpi(sv.length,"Tomas de presión",`${new Set(sv.map(r=>r.values.empleado)).size} colaboradores`,"t:signos")}
  ${kpi(hta.length,"Con hipertensión",sv.length?`${Math.round(hta.length/sv.length*100)} % de las tomas · ${ref} referidos`:"Grado 1 o mayor (NOM-030-SSA2)","t:signos",hta.length?"st-amber":"")}
  ${kpi(val.length,"Valoraciones previas",`${val.filter(r=>r.values.resultado==="No apto").length} no aptos`,"t:valoracion")}
@@ -3091,6 +3117,7 @@ function viewApprove(){
  const cons=(S.ap.projects||[]).map(pid=>S.projects[pid]).filter(p=>p&&p.aviso).map(p=>{const c=S.consents[id+"|"+p.id];return`<div class="row" style="justify-content:space-between"><span class="small">${esc(p.nombre)}</span><span class="pill ${c&&c.url===p.aviso?"green":"amber"}">${c&&c.url===p.aviso?"Aceptado "+fmtD(c.at):"Pendiente"}</span></div>`}).join("");
  return`<div class="card"><h2>${esc(b.nombre)}</h2><div class="muted small">${esc(b.email||"")}${b.telefono?" · "+esc(b.telefono):""}<br>${esc(b.empresa||"")}${b.puesto?" · "+esc(b.puesto):""}${q.createdAt?`<br>Solicitó el ${fmtDT(q.createdAt)}`:""}</div>
  ${canEd&&(S.members[id]||S.requests[id])?`<details class="rect"><summary>Corregir datos (rectificación)</summary><div class="form" style="margin-top:8px"><div class="field"><label for="ap-n">Nombre</label><input class="inp" id="ap-n" value="${esc(b.nombre||"")}"></div><div class="field"><label for="ap-t">Teléfono</label><input class="inp" id="ap-t" inputmode="tel" value="${esc(b.telefono||"")}"></div><div class="field"><label for="ap-em">Empresa</label><input class="inp" id="ap-em" value="${esc(b.empresa||"")}"></div><div class="field"><label for="ap-pu">Puesto</label><input class="inp" id="ap-pu" value="${esc(b.puesto||"")}"></div><div class="help">El correo no se cambia aquí porque es el de inicio de sesión. Se guarda al tocar ${isMember?"Guardar cambios":"Aprobar acceso"}.</div></div></details>`:""}</div>
+ ${S.members[id]&&m.email&&canEd&&window.cloud&&cloud.resetPass?`<div class="card"><h3>Contraseña</h3><div class="muted small">Si olvidó su contraseña, envíale el correo oficial para crear una nueva. Le llega a <b>${esc(m.email)}</b> (que revise también correo no deseado).</div><div><button class="btn sm" data-act="pw-reset" data-v="${esc(id)}">Enviar correo para restablecer contraseña</button></div></div>`:""}
  ${S.members[id]?`<div class="card"><h3>Documentos del usuario</h3><div class="muted small">CV, constancias y certificados. El usuario también puede cargarlos desde Más.</div>${pdocList(id,canEd)}</div>`:""}
  ${cons?`<div class="card"><h3>Aviso de privacidad</h3>${cons}</div>`:""}
  ${!canEd?`<div class="notice warn">${m.role==="padmin"||m.role==="admin"?"Es administrador; solo el administrador general puede modificarlo.":perfilesOf(m).includes("salud")?"Tiene el perfil Salud; solo el administrador general puede modificarlo.":"Este usuario también trabaja en proyectos que no administras. Solo el administrador general puede modificarlo."}</div>`:`<div class="card"><div class="field"><span class="flabel">Rol</span><div class="chips">${roles.map(([v,l])=>`<button class="chip" data-act="aprole" data-v="${v}" aria-pressed="${S.ap.role===v}">${l}</button>`).join("")}</div><div class="help">${{supervisor:"Captura en campo y ve solo sus registros.",lider:"Captura en campo y ve todos los registros y el tablero de sus proyectos. No elimina ni cierra hallazgos de otros.",visor:"Solo consulta el tablero y los registros de sus proyectos.",padmin:"Administra sus proyectos: aprueba y crea usuarios, edita los datos del proyecto, cierra hallazgos, marca accidentes como enterados y elimina registros. No crea ni elimina proyectos."}[S.ap.role]||""}</div></div>
@@ -3202,25 +3229,70 @@ function viewMas(){
  ${(S.myArco||[]).map(a=>`<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:8px"><span class="small"><b>${esc(a.tipo)}</b> · ${fmtD(a.at)}<br><span class="muted">${esc(a.respuesta||"Sin respuesta todavía")}</span></span><span class="pill ${arcoCls(a)}">${esc(a.estado||"Recibida")}</span></div>`).join("")}</div>
  ${r!=="visor"?`<div class="card"><h3>Portafolio de evidencias EC0680</h3><div class="muted small">Tus formatos agrupados por elemento del estándar.</div><div><button class="btn sm primary" data-act="port">Abrir portafolio</button></div></div>`:""}
  ${installCard()}
- <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.16<br>Elaborado por José Alfredo González García</div>`;
+ <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.18<br>Elaborado por José Alfredo González García</div>`;
 }
 function viewPortfolio(){
  if(wantsHistory())ensureHistory();
  const who=(S.isAdmin||isPA())?S.port.who:S.uid,a=new Date(S.port.from+"T00:00"),b=new Date(S.port.to+"T23:59:59");
  const authors={};visible().forEach(r=>authors[r.authorId]=r.authorName);
- const rs=visible().filter(r=>!r.pending&&(!who||r.authorId===who)&&new Date(r.createdAt)>=a&&new Date(r.createdAt)<=b),cnt=k=>rs.filter(r=>r.type===k).length;
+ const rs=portRecs(),cnt=k=>rs.filter(r=>r.type===k).length,ps=myProjects();
  const prods=[["apr","Análisis de riesgo previo (E2147)"],["observaciones","Reporte de observaciones (E2148)"],["reporte","Reporte de cierre de jornada (E2149)"],["platica","Minuta de reunión firmada (E2149)"]];
  return`<div class="muted small">Agrupa los formatos por elemento del estándar EC0680. Los desempeños los observa el evaluador en campo.</div>
  <div class="card">${(S.isAdmin||isPA())?`<div class="field"><label for="pt-w">Supervisor</label><select class="inp" id="pt-w" data-chg="pwho"><option value="">Todos</option>${Object.entries(authors).map(([id,n])=>`<option value="${esc(id)}" ${who===id?"selected":""}>${esc(n)}</option>`).join("")}</select></div>`:""}
+ ${ps.length>1?`<div class="field"><label for="pt-p">Proyecto</label><select class="inp" id="pt-p" data-chg="pproj"><option value="all">Todos los proyectos</option>${ps.map(p=>`<option value="${esc(p.id)}" ${S.port.proj===p.id?"selected":""}>${esc(p.nombre)}</option>`).join("")}</select></div>`:""}
  <div class="row" style="flex-wrap:nowrap"><div class="field" style="flex:1"><label for="pt-f">Desde</label><input class="inp" type="date" id="pt-f" data-chg="pfrom" value="${S.port.from}"></div><div class="field" style="flex:1"><label for="pt-t">Hasta</label><input class="inp" type="date" id="pt-t" data-chg="pto" value="${S.port.to}"></div></div></div>
  <section class="section"><h3>Productos del estándar</h3><div class="list">${prods.map(([k,l])=>`<div class="item" style="cursor:default"><span class="code c-${MOD[k].code}">${MOD[k].code}</span><span class="item-main"><span style="font-weight:700">${l}</span><span class="item-m">${cnt(k)} en el periodo</span></span><span class="pill ${cnt(k)?"green":"amber"}">${cnt(k)?"Con evidencia":"Pendiente"}</span></div>`).join("")}</div></section>
  ${EC_GROUPS.map(g=>`<div class="card"><div class="ey">${g.code}</div><b>${esc(g.name)}</b>${g.mods.map(k=>`<div class="row" style="justify-content:space-between"><span>${MOD[k].code} · ${esc(MOD[k].name)}</span><span class="mono">${cnt(k)}</span></div>`).join("")}</div>`).join("")}
- ${S.dl?`<button class="btn primary" data-act="port-dl" ${rs.length?"":"disabled"}>Descargar portafolio (${rs.length} registros)</button>`:""}`;
+ ${S.dl?`<button class="btn primary" data-act="port-dl" ${rs.length?"":"disabled"}>Descargar portafolio (${rs.length} registros)</button>
+ <div class="card"><h3>Registros por separado (ZIP)</h3><div class="muted small">Cada registro en su propio archivo, con fotos y firmas, en carpetas. Incluye un índice por supervisor y uno general en Excel (CSV). Los datos de salud no se incluyen.</div>
+ <div class="field"><label for="pt-g">Organizar carpetas por</label><select class="inp" id="pt-g" data-chg="pgroup"><option value="proyecto" ${S.port.group==="proyecto"?"selected":""}>Proyecto → Supervisor</option><option value="empresa" ${S.port.group==="empresa"?"selected":""}>Empresa (principal o contratista) → Supervisor</option><option value="supervisor" ${S.port.group==="supervisor"?"selected":""}>Supervisor → Proyecto</option></select></div>
+ <button class="btn" data-act="port-zip" ${rs.length?"":"disabled"}>Descargar ZIP (${rs.length} registros)</button><div class="help">Abre el ZIP en la computadora; cada archivo se abre en el navegador y se imprime como PDF.</div></div>`:""}`;
 }
+// Registros del portafolio según supervisor, proyecto y fechas (sin datos de salud)
+function portRecs(){const who=(S.isAdmin||isPA())?S.port.who:S.uid,a=new Date(S.port.from+"T00:00"),b=new Date(S.port.to+"T23:59:59");return visible().filter(r=>!r.pending&&!isSalud(r)&&(!who||r.authorId===who)&&(S.port.proj==="all"||r.projectId===S.port.proj)&&new Date(r.createdAt)>=a&&new Date(r.createdAt)<=b)}
+/* ZIP sin compresión, generado en el teléfono (sin librerías) */
+const CRC_T=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function crc32(u){let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=CRC_T[(c^u[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0}
+function makeZip(files){const enc=new TextEncoder(),parts=[],cen=[];let off=0;const d=new Date(),dt=((d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1))&0xFFFF,dd=(((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate())&0xFFFF;
+ for(const f of files){const nm=enc.encode(f.name),data=typeof f.data==="string"?enc.encode(f.data):f.data,crc=crc32(data);
+  const h=new DataView(new ArrayBuffer(30));h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);h.setUint16(10,dt,true);h.setUint16(12,dd,true);h.setUint32(14,crc,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);h.setUint16(26,nm.length,true);h.setUint16(28,0,true);
+  parts.push(h,nm,data);const c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(10,0,true);c.setUint16(12,dt,true);c.setUint16(14,dd,true);c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,nm.length,true);c.setUint32(42,off,true);cen.push(c,nm);off+=30+nm.length+data.length}
+ const cs=cen.reduce((s,x)=>s+(x.byteLength||x.length),0),e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cs,true);e.setUint32(16,off,true);
+ return new Blob([...parts,...cen,e],{type:"application/zip"})}
+const fsafe=t=>String(t||"Sin nombre").normalize("NFC").replace(/[\\/:*?"<>|#%]+/g,"-").replace(/\s+/g," ").trim().slice(0,60)||"Sin nombre";
+async function dlPortZip(btn){
+ if(wantsHistory()&&S.histState!=="done")await ensureHistory();
+ const rs=portRecs().slice().sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt)));if(!rs.length)return;
+ if(btn){btn.disabled=true;btn.textContent="Preparando fotos…"}
+ const need=rs.filter(needsMedia).length;if(need)await loadMedia(rs.map(r=>r.id));
+ const g=S.port.group,emp=r=>recOrg(r)==="contratista"?(recEmp(r)||"Contratista"):"Empresa principal";
+ const dir=r=>g==="empresa"?`${fsafe(emp(r))}/${fsafe(r.authorName)}`:g==="supervisor"?`${fsafe(r.authorName)}/${fsafe(projName(r.projectId))}`:`${fsafe(projName(r.projectId))}/${fsafe(r.authorName)}`;
+ const files=[],idx={},seen={},q=x=>'"'+String(x??"").replace(/"/g,'""').replace(/\n/g," ")+'"',rows=[];
+ rs.forEach((x,i)=>{if(btn&&i%10===0)btn.textContent=`Generando ${i+1} de ${rs.length}…`;const r=withMedia(x),m=MOD[r.type]||{name:r.type,code:"REG",ec:""},d=dir(r);
+  let fn=`${localD(new Date(r.createdAt))}_${fsafe(r.folio)}_${fsafe(m.name)}.html`;const key=d+"/"+fn;if(seen[key])fn=fn.replace(".html",`_${++seen[key]}.html`);else seen[key]=1;
+  files.push({name:`${d}/${fn}`,data:docShell(m.name,`${projName(r.projectId)} · ${m.ec}`,S.projects[r.projectId],recBlock(r))});
+  (idx[d]=idx[d]||[]).push({fn,r,m});rows.push([d+"/"+fn,r.folio,m.name,projName(r.projectId),fmtDT(r.createdAt),r.authorName,emp(r),recTitle(r),CLOSABLE.includes(r.type)?(r.status||"abierto"):""].map(q).join(","))});
+ Object.entries(idx).forEach(([d,L])=>{const body=`<table style="border-collapse:collapse;width:100%"><tr><th style="width:auto">Fecha</th><th style="width:auto">Folio</th><th style="width:auto">Formato</th><th style="width:auto">Descripción</th></tr>${L.map(o=>`<tr><td>${fmtDT(o.r.createdAt)}</td><td><a href="${encodeURI(o.fn)}">${esc(o.r.folio)}</a></td><td>${esc(o.m.name)}</td><td>${esc(recTitle(o.r).slice(0,90))}</td></tr>`).join("")}</table>`;
+  files.push({name:`${d}/00_Indice.html`,data:docShell("Índice de registros",`${d.replace("/"," · ")} · ${fmtD(S.port.from)} a ${fmtD(S.port.to)} · ${L.length} registros`,S.projects[L[0].r.projectId],body)})});
+ files.push({name:"indice_general.csv",data:"\ufeff"+["Archivo","Folio","Formato","Proyecto","Fecha","Supervisor","Empresa","Descripción","Estado"].map(q).join(",")+"\n"+rows.join("\n")});
+ const zip=makeZip(files);logBit("Descargó registros en ZIP",`${rs.length} registros · por ${g}`);
+ await save(`Registros_${S.port.from}_a_${S.port.to}.zip`,zip);if(btn){btn.disabled=false;btn.textContent=`Descargar ZIP (${rs.length} registros)`}}
+// Registros de salud por separado (administrador general y administradores de proyecto): Proyecto / Colaborador / archivo
+async function dlSaludZip(btn){if(!S.isAdmin&&!isPA())return;const rs=filtered().filter(isSalud).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt)));if(!rs.length){toast("No hay registros de salud con estos filtros.");return}
+ if(!confirm(`Se descargarán ${rs.length} registros de salud (datos sensibles). Guárdalos en un lugar protegido y no los compartas por WhatsApp o correo sin cifrar. ¿Continuar?`))return;
+ if(btn){btn.disabled=true;btn.textContent="Preparando…"}await loadMedia(rs.map(r=>r.id));
+ const files=[],idx={},seen={},q=x=>'"'+String(x??"").replace(/"/g,'""').replace(/\n/g," ")+'"',rows=[];
+ rs.forEach(x=>{const r=withMedia(x),v=r.values||{},m=MOD[r.type],d=`${fsafe(projName(r.projectId))}/${fsafe((v.empleado?"No "+v.empleado+" - ":"")+(v.colaborador||"Sin nombre"))}`;
+  let fn=`${localD(new Date(r.createdAt))}_${fsafe(r.folio)}_${fsafe(m.name)}.html`;if(seen[d+fn])fn=fn.replace(".html",`_${++seen[d+fn]}.html`);else seen[d+fn]=1;
+  files.push({name:`${d}/${fn}`,data:docShell(m.name+" · CONFIDENCIAL",`${projName(r.projectId)} · Datos personales sensibles`,S.projects[r.projectId],recBlock(r))});(idx[d]=idx[d]||[]).push({fn,r,m});
+  const vt=v.vitales||{};rows.push([d+"/"+fn,r.folio,m.name,projName(r.projectId),fmtDT(r.createdAt),v.colaborador,v.empleado,v.empresa,vt.sis,vt.dia,vt.clasif,v.conducta||v.resultado||v.destino||"",r.authorName].map(q).join(","))});
+ Object.entries(idx).forEach(([d,L])=>files.push({name:`${d}/00_Expediente.html`,data:docShell("Expediente de salud del colaborador · CONFIDENCIAL",d.replace("/"," · "),S.projects[L[0].r.projectId],L.map(o=>recBlock(o.r)).join(""))}));
+ files.push({name:"indice_salud.csv",data:"﻿"+["Archivo","Folio","Formato","Proyecto","Fecha","Colaborador","No. empleado","Empresa","Sistólica","Diastólica","Clasificación","Conducta / dictamen / destino","Registró"].map(q).join(",")+"\n"+rows.join("\n")});
+ logBit("Descargó datos de salud (ZIP)",`${rs.length} registros`);await save(`Salud_CONFIDENCIAL_${localD()}.zip`,makeZip(files));if(btn){btn.disabled=false;btn.textContent="🔒 Salud por separado (ZIP)"}}
 async function dlPortfolio(){
  if(wantsHistory()&&S.histState!=="done"){await ensureHistory()}
- const who=(S.isAdmin||isPA())?S.port.who:S.uid,a=new Date(S.port.from+"T00:00"),b=new Date(S.port.to+"T23:59:59");
- const rs=visible().filter(r=>!r.pending&&(!who||r.authorId===who)&&new Date(r.createdAt)>=a&&new Date(r.createdAt)<=b).slice().reverse();
+ const who=(S.isAdmin||isPA())?S.port.who:S.uid;
+ const rs=portRecs().slice().reverse();
  const need=rs.filter(needsMedia).length;if(need){toast(`Preparando ${need} registro${need>1?"s":""} con fotos…`);await loadMedia(rs.map(r=>r.id))}
  const name=who?((rs[0]&&rs[0].authorName)||authorName()):"Todos los supervisores";
  const body=EC_GROUPS.map(g=>{const sub=rs.filter(r=>g.mods.includes(r.type));return`<h2>${g.code} · ${esc(g.name)}</h2>${sub.length?sub.map(recBlock).join(""):`<p class="muted">Sin evidencias en el periodo.</p>`}`}).join("");
@@ -3283,6 +3355,13 @@ document.addEventListener("click",async e=>{
   case"rp-send":sendReply();break;
   case"pdoc-new":openPdoc(v);break;
   case"pdoc-del":{const[uid,did]=v.split("|"),m=S.members[uid];if(!m||!confirm("¿Quitar este documento del perfil?"))return;const docs=(m.docs||[]).filter(x=>x.id!==did);try{await S.db.doc("members/"+uid).update({docs});m.docs=docs;logBit("Quitó documento de perfil",m.nombre);render();toast("Documento quitado")}catch(e){toast("No se pudo quitar.")}break}
+  case"rview":S.rview=v;render(true);break;
+  case"jday":{const d=new Date((S.jday||localD())+"T12:00");d.setDate(d.getDate()+Number(v));const nd=localD(d);if(nd<=localD()){S.jday=nd;render()}break}
+  case"zip-salud":dlSaludZip(b);break;
+  case"pw-reset":{const m=S.members[v];if(!m||!m.email)return;if(!confirm(`¿Enviar a ${m.email} el correo para crear una contraseña nueva?`))return;b.disabled=true;
+   try{await cloud.resetPass(m.email);logBit("Envió restablecimiento de contraseña",m.nombre);const txt=`Hola ${(m.nombre||"").split(" ")[0]}: te envié un correo a ${m.email} para crear tu nueva contraseña de Supervisión EHS. Ábrelo (revisa también correo no deseado), crea la contraseña y entra con ella en ${location.href.split("#")[0]}`;
+    openModal(`<div class="sheet-head"><h2>Correo enviado</h2><button class="btn sm ghost" data-act="close">Listo</button></div><div class="notice ok">Se envió a <b>${esc(m.email)}</b> el enlace para crear una contraseña nueva. Vence en unas horas.</div><div class="help">Avísale para que lo busque:</div><div class="row">${m.telefono?`<a class="btn sm primary" href="${waURL(m.telefono,txt)}" target="_blank" rel="noopener">Avisar por WhatsApp</a>`:`<a class="btn sm primary" href="https://wa.me/?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener">Avisar por WhatsApp</a>`}</div>`)}
+   catch(e){b.disabled=false;toast(e&&e.message?e.message:"No se pudo enviar el correo.")}break}
   case"uf-clear":S.uf={proj:"all",q:""};render();break;
   case"docs":push("documentos");break;
   case"doc-open":{const[pid,did]=v.split("|");openDoc(pid,did);break}
@@ -3344,6 +3423,7 @@ document.addEventListener("click",async e=>{
   case"discard":S.outbox=S.outbox.filter(o=>o.id!==v);saveOutbox();render();toast("Registro descartado");break;
   case"port":push("portafolio");break;
   case"port-dl":dlPortfolio();break;
+  case"port-zip":dlPortZip(b);break;
  }
 });
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#modal").hidden)closeModal();if((e.key==="Enter"||e.key===" ")&&e.target.matches(".sigbox[data-act]")){e.preventDefault();e.target.click()}});
@@ -3363,7 +3443,7 @@ document.addEventListener("change",async e=>{
  if(t.dataset.logo){const f=t.files&&t.files[0];if(!f)return;syncProject();try{S.editProject.logo=await compress(f,240,1,"image/png");render()}catch(err){toast("No se pudo leer el logo.")}return}
  const c=t.dataset.chg;if(!c)return;
  if(c==="proj"){S.projectId=t.value;lsSet("ehs.project",t.value)}else if(c==="period")S.f.period=t.value;else if(c==="fproj")S.f.proj=t.value;else if(c==="ftype")S.f.type=t.value;else if(c==="forg")S.f.org=t.value;
- else if(c==="rgproj")S.rgProj=t.value;else if(c==="ufproj")S.uf.proj=t.value;else if(c==="dproj")S.dproj=t.value;else if(c==="pwho")S.port.who=t.value;else if(c==="pfrom")S.port.from=t.value||S.port.from;else if(c==="pto")S.port.to=t.value||S.port.to;
+ else if(c==="rgproj")S.rgProj=t.value;else if(c==="ufproj")S.uf.proj=t.value;else if(c==="jday")S.jday=t.value||localD();else if(c==="dproj")S.dproj=t.value;else if(c==="pwho")S.port.who=t.value;else if(c==="pproj")S.port.proj=t.value;else if(c==="pgroup")S.port.group=t.value;else if(c==="pfrom")S.port.from=t.value||S.port.from;else if(c==="pto")S.port.to=t.value||S.port.to;
  render();
 });
 document.addEventListener("submit",e=>{if(e.target.id==="userForm"){e.preventDefault();submitNewUser();return}if(e.target.id==="arcoForm"){e.preventDefault();submitArco();return}if(e.target.id==="docForm"){e.preventDefault();submitDoc();return}if(e.target.id==="pdocForm"){e.preventDefault();submitPdoc();return}if(e.target.id==="recForm")saveForm(e);else if(e.target.id==="regForm")submitRegister(e);else if(e.target.id==="projForm")saveProject(e);else e.preventDefault()});
