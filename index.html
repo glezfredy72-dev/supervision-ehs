@@ -195,6 +195,9 @@ canvas.pad{width:100%;aspect-ratio:400/150;background:#fff;border:1px solid var(
 .pdf th{background:#eaf0f6;width:34%}
 .center{display:flex;flex-direction:column;gap:14px;padding-top:16px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Oculta la insignia y la barra promocional que Netlify inyecta */
+#nl-badge-frame,#nl-hud-frame{display:none!important}
 </style>
 
 <div class="app" id="screen">
@@ -3234,7 +3237,7 @@ function viewMas(){
  ${(S.myArco||[]).map(a=>`<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:8px"><span class="small"><b>${esc(a.tipo)}</b> · ${fmtD(a.at)}<br><span class="muted">${esc(a.respuesta||"Sin respuesta todavía")}</span></span><span class="pill ${arcoCls(a)}">${esc(a.estado||"Recibida")}</span></div>`).join("")}</div>
  ${r!=="visor"?`<div class="card"><h3>Portafolio de evidencias EC0680</h3><div class="muted small">Tus formatos agrupados por elemento del estándar.</div><div><button class="btn sm primary" data-act="port">Abrir portafolio</button></div></div>`:""}
  ${installCard()}
- <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.19<br>Elaborado por José Alfredo González García</div>`;
+ <div class="muted small" style="text-align:center">Supervisión EHS · versión 1.20<br>Elaborado por José Alfredo González García</div>`;
 }
 function viewPortfolio(){
  if(wantsHistory())ensureHistory();
